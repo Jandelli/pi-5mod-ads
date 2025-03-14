@@ -38,6 +38,21 @@ class AplicAI extends StatelessWidget {
         ),
         onGenerateRoute: AppRouter.onGenerateRoute,
         initialRoute: RouteConstants.splash,
+        builder: (context, child) {
+          // Add error handling for the entire app
+          ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  'An error has occurred.\n${errorDetails.exception}',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          };
+          return child ?? const SizedBox.shrink();
+        },
       ),
     );
   }

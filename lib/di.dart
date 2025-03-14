@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'core/network/network_info.dart';
 import 'data/datasources/firebase_auth_datasource.dart';
 import 'data/datasources/firestore_chat_datasource.dart';
@@ -37,94 +37,115 @@ import 'domain/usecases/send_message.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  //! Features
+  try {
+    //! Features
 
-  // BLoCs will be registered in their respective presentation layers
+    // BLoCs will be registered in their respective presentation layers
 
-  // Use cases - use the actual class names from your implementation files
-  sl.registerLazySingleton(() => SignInWithEmail(sl()));
-  sl.registerLazySingleton(() => SignUp(sl()));
-  sl.registerLazySingleton(() => GetUserProfile(sl()));
-  sl.registerLazySingleton(() => UpdateUserProfile(sl()));
-  sl.registerLazySingleton(() => GetRecommendedJobs(sl()));
-  sl.registerLazySingleton(() => LikeJob(sl()));
-  sl.registerLazySingleton(() => PostJob(sl()));
-  sl.registerLazySingleton(() => SendMessage(sl()));
+    // Use cases - use the actual class names from your implementation files
+    sl.registerLazySingleton(() => SignInWithEmail(sl()));
+    sl.registerLazySingleton(() => SignUp(sl()));
+    sl.registerLazySingleton(() => GetUserProfile(sl()));
+    sl.registerLazySingleton(() => UpdateUserProfile(sl()));
+    sl.registerLazySingleton(() => GetRecommendedJobs(sl()));
+    sl.registerLazySingleton(() => LikeJob(sl()));
+    sl.registerLazySingleton(() => PostJob(sl()));
+    sl.registerLazySingleton(() => SendMessage(sl()));
 
-  //! Repositories
-  sl.registerLazySingleton<AuthRepository>(
-    () => data_impl.AuthRepositoryImpl(
-      firebaseAuthDataSource: sl(),
-      localStorageDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
+    //! Repositories
+    sl.registerLazySingleton<AuthRepository>(
+      () => data_impl.AuthRepositoryImpl(
+        firebaseAuthDataSource: sl(),
+        localStorageDataSource: sl(),
+        networkInfo: sl(),
+      ),
+    );
 
-  sl.registerLazySingleton<UserRepository>(
-    () => UserRepositoryImpl(
-      firestoreUserDataSource: sl(),
-      localStorageDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
+    sl.registerLazySingleton<UserRepository>(
+      () => UserRepositoryImpl(
+        firestoreUserDataSource: sl(),
+        localStorageDataSource: sl(),
+        networkInfo: sl(),
+      ),
+    );
 
-  sl.registerLazySingleton<JobRepository>(
-    () => JobRepositoryImpl(firestoreJobDataSource: sl(), networkInfo: sl()),
-  );
+    sl.registerLazySingleton<JobRepository>(
+      () => JobRepositoryImpl(firestoreJobDataSource: sl(), networkInfo: sl()),
+    );
 
-  sl.registerLazySingleton<MatchRepository>(
-    () =>
-        MatchRepositoryImpl(firestoreMatchDataSource: sl(), networkInfo: sl()),
-  );
+    sl.registerLazySingleton<MatchRepository>(
+      () => MatchRepositoryImpl(
+        firestoreMatchDataSource: sl(),
+        networkInfo: sl(),
+      ),
+    );
 
-  sl.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(firestoreChatDataSource: sl(), networkInfo: sl()),
-  );
+    sl.registerLazySingleton<ChatRepository>(
+      () =>
+          ChatRepositoryImpl(firestoreChatDataSource: sl(), networkInfo: sl()),
+    );
 
-  sl.registerLazySingleton<StorageRepository>(
-    () => StorageRepositoryImpl(
-      firebaseStorageDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
+    sl.registerLazySingleton<StorageRepository>(
+      () => StorageRepositoryImpl(
+        firebaseStorageDataSource: sl(),
+        networkInfo: sl(),
+      ),
+    );
 
-  // DataSources
-  sl.registerLazySingleton<FirebaseAuthDataSource>(
-    () => FirebaseAuthDataSourceImpl(firebaseAuth: sl()),
-  );
+    // DataSources
+    sl.registerLazySingleton<FirebaseAuthDataSource>(
+      () => FirebaseAuthDataSourceImpl(firebaseAuth: sl()),
+    );
 
-  sl.registerLazySingleton<FirestoreUserDataSource>(
-    () => FirestoreUserDataSourceImpl(firestore: sl()),
-  );
+    sl.registerLazySingleton<FirestoreUserDataSource>(
+      () => FirestoreUserDataSourceImpl(firestore: sl()),
+    );
 
-  sl.registerLazySingleton<FirestoreJobDataSource>(
-    () => FirestoreJobDataSourceImpl(firestore: sl()),
-  );
+    sl.registerLazySingleton<FirestoreJobDataSource>(
+      () => FirestoreJobDataSourceImpl(firestore: sl()),
+    );
 
-  sl.registerLazySingleton<FirestoreMatchDataSource>(
-    () => FirestoreMatchDataSourceImpl(firestore: sl()),
-  );
+    sl.registerLazySingleton<FirestoreMatchDataSource>(
+      () => FirestoreMatchDataSourceImpl(firestore: sl()),
+    );
 
-  sl.registerLazySingleton<FirestoreChatDataSource>(
-    () => FirestoreChatDataSourceImpl(firestore: sl()),
-  );
+    sl.registerLazySingleton<FirestoreChatDataSource>(
+      () => FirestoreChatDataSourceImpl(firestore: sl()),
+    );
 
-  sl.registerLazySingleton<FirebaseStorageDataSource>(
-    () => FirebaseStorageDataSourceImpl(storage: sl()),
-  );
+    sl.registerLazySingleton<FirebaseStorageDataSource>(
+      () => FirebaseStorageDataSourceImpl(storage: sl()),
+    );
 
-  sl.registerLazySingleton<LocalStorageDataSource>(
-    () => LocalStorageDataSourceImpl(sharedPreferences: sl()),
-  );
+    sl.registerLazySingleton<LocalStorageDataSource>(
+      () => LocalStorageDataSourceImpl(sharedPreferences: sl()),
+    );
 
-  //! Core
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+    //! Core
+    sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
-  //! External
-  final sharedPreferences = await SharedPreferences.getInstance();
-  sl.registerLazySingleton(() => sharedPreferences);
-  sl.registerLazySingleton(() => FirebaseAuth.instance);
-  sl.registerLazySingleton(() => FirebaseFirestore.instance);
-  sl.registerLazySingleton(() => FirebaseStorage.instance);
-  sl.registerLazySingleton(() => InternetConnectionChecker.createInstance());
+    //! External
+    final sharedPreferences = await SharedPreferences.getInstance();
+    sl.registerLazySingleton(() => sharedPreferences);
+    sl.registerLazySingleton(() => FirebaseAuth.instance);
+    sl.registerLazySingleton(() => FirebaseFirestore.instance);
+    sl.registerLazySingleton(() => FirebaseStorage.instance);
+
+    // Use a different approach for web platform for connectivity
+    if (kIsWeb) {
+      sl.registerLazySingleton(
+        () => InternetConnectionChecker.createInstance(),
+      );
+    } else {
+      sl.registerLazySingleton(
+        () => InternetConnectionChecker.createInstance(),
+      );
+    }
+  } catch (e, stackTrace) {
+    if (kDebugMode) {
+      print('Error in dependency injection: $e');
+      print('Stack trace: $stackTrace');
+    }
+    rethrow;
+  }
 }
