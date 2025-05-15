@@ -1,0 +1,329 @@
+{
+  "dashboard": "Painel",
+  "translate": "Traduzir",
+  "calendar": "Calendário",
+  "resources": "Recursos",
+  "users": "Usuários",
+  "user": "Usuário",
+  "sources": "Fontes",
+  "settings": "Configurações",
+  "create": "Criar",
+  "information": "Informação",
+  "source": "Fonte",
+  "license": "Licença",
+  "thirdPartyLicenses": "Licenças de Terceiros",
+  "documentation": "Documentação",
+  "privacyPolicy": "Política de Privacidade",
+  "imprint": "Imprimir",
+  "releaseNotes": "Notas de Versão",
+  "changelog": "Histórico de Mudanças",
+  "legal": "Informações Legais",
+  "personalization": "Personalização",
+  "design": "Design",
+  "language": "Idioma",
+  "theme": "Tema",
+  "classic": "Clássico",
+  "systemDefault": "Padrão do Sistema",
+  "light": "Claro",
+  "dark": "Escuro",
+  "createResource": "Criar recurso",
+  "cancel": "Cancelar",
+  "name": "Nome:",
+  "description": "Descrição:",
+  "start": "Iniciar",
+  "next": "Próximo",
+  "skip": "Ignorar",
+  "back": "Voltar",
+  "today": "Hoje",
+  "groups": "Grupos",
+  "createGroup": "Criar grupo",
+  "editGroup": "Editar grupo",
+  "list": "Lista",
+  "day": "Dia",
+  "week": "Semana",
+  "month": "Mês",
+  "version": "Versão",
+  "intro": "Introdução",
+  "caldavDescription": "A interface CalDAV permite que você acesse seus dados de qualquer servidor CalDAV. Tem suporte limitado e apenas funções básicas são suportadas. Você pode usá-lo para sincronizar seus dados com outros dispositivos ou serviços.",
+  "webdavDescription": "A interface WebDAV permite que você acesse seus dados de qualquer servidor WebDAV. Arquivos e diretórios para armazenar dados. Você pode usá-lo para sincronizar seus dados com outros dispositivos ou serviços.",
+  "server": "Servidor",
+  "serverDescription": "Sincronize seus dados com um servidor nativo do Momentum. Isso é recomendado para usuários que querem auto-hospedar seus dados.",
+  "googleDescription": "Sincronize seus dados com o Google. Isso é recomendado para usuários que querem usar sua conta do Google para acessar seus dados. Nem todos os recursos estão disponíveis com esta opção.",
+  "microsoftDescription": "Sincronize seus dados com a Microsoft. Isso é recomendado para usuários que queiram usar sua conta da Microsoft para acessar seus dados. Nem todos os recursos estão disponíveis com esta opção.",
+  "addSource": "Adicionar fonte",
+  "local": "Local",
+  "close": "Fechar",
+  "unknown": "Desconhecido",
+  "loading": "Carregando...",
+  "export": "Exportação",
+  "createEvent": "Criar evento",
+  "save": "Salvar",
+  "allSources": "Todas as fontes",
+  "editEvent": "Editar evento",
+  "end": "Término",
+  "location": "Localização:",
+  "status": "SItuação",
+  "confirmed": "Confirmado",
+  "draft": "Rascunho",
+  "cancelled": "Cancelado",
+  "general": "Gerais",
+  "notes": "Notas",
+  "createNote": "Criar nota",
+  "editNote": "Editar nota",
+  "indicatorEmpty": "Nenhum item encontrado",
+  "indicatorEmptyDescription": "A lista está atualmente vazia.",
+  "indicatorLoading": "Carregando...",
+  "indicatorError": "Ocorreu um erro",
+  "indicatorErrorDescription": "Ocorreu um erro ao carregar os dados.",
+  "tryAgain": "Tente novamente",
+  "eventInfo": "{event} em {date} às {time} em {location} ({status})",
+  "@eventInfo": {
+    "placeholders": {
+      "event": {
+        "type": "String",
+        "example": "Meeting"
+      },
+      "date": {
+        "type": "String",
+        "example": "2021-01-01"
+      },
+      "time": {
+        "type": "String",
+        "example": "12:00"
+      },
+      "location": {
+        "type": "String",
+        "example": "Office"
+      },
+      "status": {
+        "type": "String",
+        "example": "Confirmed"
+      }
+    }
+  },
+  "filter": "Filtro",
+  "done": "Concluído",
+  "inProgress": "Em Progresso",
+  "note": "Nota",
+  "delete": "Excluir",
+  "edit": "Editar",
+  "deleteGroup": "Excluir grupo {name}",
+  "@deleteGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Group name"
+      }
+    }
+  },
+  "deleteGroupDescription": "Tem certeza que deseja excluir o grupo {name}?",
+  "@deleteGroupDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Group name"
+      }
+    }
+  },
+  "groupName": "Grupo {name}",
+  "@groupName": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Group name"
+      }
+    }
+  },
+  "noData": "Não há dados para exibir.",
+  "noEvents": "Não há eventos para exibir.",
+  "group": "Grupo",
+  "search": "Pesquisar",
+  "events": "Eventos",
+  "past": "Passado",
+  "decentralized": "Descentralizado",
+  "decentralizedDescription": "A interface descentralizada permite que você acesse seus dados a partir de qualquer servidor descentralizado. Você pode usá-lo para sincronizar seus dados com outros dispositivos ou serviços.",
+  "importFile": "Importar arquivo",
+  "importFileDescription": "Importar um arquivo do seu dispositivo. Você pode importar um arquivo de banco de dados de outra instância do Momentum ou um arquivo de calendário comum.",
+  "icalDescription": "A interface iCal permite que você acesse seus dados a partir de qualquer servidor iCal. Só pode ler dados e não suporta a escrita. Você pode usá-lo para sincronizar seus dados com outros dispositivos ou serviços que não suportam CalDAV.",
+  "resource": "Recurso",
+  "editResource": "Editar recurso",
+  "deleteResource": "Excluir recurso {name}",
+  "@deleteResource": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Resource name"
+      }
+    }
+  },
+  "deleteResourceDescription": "Tem certeza que deseja excluir o recurso {name}?",
+  "@deleteResourceDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Resource name"
+      }
+    }
+  },
+  "priority": "Prioridade",
+  "assignEvent": "Atribuir evento",
+  "noEvent": "Nenhum evento",
+  "parentGroup": "Grupo pai",
+  "deleteUser": "Excluir usuário {name}",
+  "@deleteUser": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "User name"
+      }
+    }
+  },
+  "createUser": "Criar usuário",
+  "editUser": "Atualizar usuário",
+  "deleteUserDescription": "Tem certeza que deseja excluir o usuário {name}?",
+  "@deleteUserDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "User name"
+      }
+    }
+  },
+  "pending": "Pendente",
+  "removeEvent": "Excluir evento",
+  "event": "Evento",
+  "nativeTitleBar": "Barra de título nativa",
+  "blocked": "Bloqueado",
+  "countEvents": "{count, plural, =0 {Sem eventos} one {1 evento} other {{count} eventos}}",
+  "@countEvents": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "import": "Importação",
+  "confirmImport": "Você tem certeza que deseja importá-lo?",
+  "welcome": "Boas-vindas",
+  "url": "URL:",
+  "username": "Usuário:",
+  "password": "Senha",
+  "connect": "Conectar",
+  "data": "Dado",
+  "syncing": "Sincronizando",
+  "synced": "Sincronizado",
+  "error": "Erro",
+  "always": "Sempre",
+  "noMobile": "Sem celular",
+  "manual": "Manualmente",
+  "syncMode": "Modo de sincronização",
+  "todo": "Todo",
+  "appointment": "Compromisso",
+  "moment": "Momento",
+  "time": "Horário",
+  "deleteEvent": "Excluir evento {name}",
+  "@deleteEvent": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Event name"
+      }
+    }
+  },
+  "deleteEventDescription": "Tem certeza que deseja excluir o evento {name}?",
+  "@deleteEventDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Event name"
+      }
+    }
+  },
+  "createAppointment": "Criar compromisso",
+  "editAppointment": "Editar compromisso",
+  "createMoment": "Criar momento",
+  "editMoment": "Editar momento",
+  "convertToNote": "Converter para nota",
+  "convertToTodo": "Converter para tarefa",
+  "open": "Abertas",
+  "limited": "Limitada",
+  "notSet": "Não definido",
+  "createPending": "Criar pendente",
+  "editPending": "Editar pendente",
+  "convertTo": "Converter para",
+  "comingSoon": "Em breve",
+  "notSupported": "Não suportado",
+  "databaseVersion": "Versão do banco",
+  "minimize": "Minimize",
+  "maximize": "Maximize",
+  "restore": "Restaurar",
+  "markdownIsSupported": "Markdown é suportado",
+  "createLabel": "Criar marcador",
+  "editLabel": "Editar etiqueta",
+  "deleteLabel": "Excluir etiqueta {name}",
+  "@deleteLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Label name"
+      }
+    }
+  },
+  "deleteLabelDescription": "Você tem certeza que deseja excluir a etiqueta {name}?",
+  "label": "Descrição",
+  "startOfWeek": "Início da semana",
+  "headlineNumber": "Título {number}",
+  "@headlineNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "bold": "Bold",
+  "italic": "Italic",
+  "strikethrough": "Riscado",
+  "code": "Código",
+  "link": "Vincular",
+  "codeBlock": "Bloco de código",
+  "quote": "Cotação",
+  "numberedList": "Lista numerada",
+  "density": "Densidade",
+  "compact": "Compacta",
+  "comfortable": "Confortável",
+  "standard": "Padrão",
+  "highContrast": "Alto contraste",
+  "labels": "Marcadores",
+  "systemLocale": "Localização do sistema",
+  "notebooks": "Cadernos",
+  "createNotebook": "Criar caderno",
+  "editNotebook": "Editar caderno",
+  "update": "Atualizar",
+  "currentVersion": "Versão atual",
+  "checkForUpdates": "Verificar se há atualizações",
+  "checkForUpdatesWarning": "Ao realizar uma verificação de atualizações irá conectar-se ao site Flow para obter as informações.",
+  "usingLatestStable": "Está a usar a versão estável mais recente",
+  "usingLatestNightly": "Está a usar a versão noturna mais recente",
+  "updateNow": "Atualizar agora",
+  "stable": "Estável",
+  "nightly": "Noturno",
+  "updateAvailable": "Atualização disponível",
+  "countItems": "{count, plural, =0 {No items} one {1 item} other {{count} items}}",
+  "@countItems": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "systemTheme": "Tema do sistema",
+  "desktop": "Computadores",
+  "restoreSettingsFromFile": "Restaurar configurações do arquivo",
+  "exportSettingsToFile": "Exportar configurações para arquivo",
+  "alarm": "Alarme",
+  "enabled": "Habilitado",
+  "countdown": "Contagem regressiva"
+}

@@ -1,0 +1,9 @@
+Package: linwood-flow
+Version: 0.4.3
+Section: base
+Priority: optional
+Homepage: https://github.com/LinwoodDev/Flo
+Architecture: amd64
+Maintainer: Linwood <contact@linwood.dev>
+Description: Momentum
+  A feature rich event and time management system.

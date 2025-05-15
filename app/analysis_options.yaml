@@ -1,0 +1,21 @@
+# Defines a default set of lint rules enforced for
+# projects at Google. For details and rationale,
+# see https://github.com/dart-lang/pedantic#enabled-lints.
+include: package:flutter_lints/flutter.yaml
+
+# For lint rules and documentation, see http://dart-lang.github.io/linter/lints.
+# Uncomment to specify additional rules.
+# linter:
+#   rules:
+#     - camel_case_types
+#   exclude:
+#     - path/to/excluded/files/**
+linter:
+  rules:
+    library_private_types_in_public_api: false
+analyzer:
+  exclude:
+    - "build/**"
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/generated_plugin_registrant.dart"
