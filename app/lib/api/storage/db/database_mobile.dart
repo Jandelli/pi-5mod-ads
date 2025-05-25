@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart' as sqflite show openDatabase;
 import '../../directory.dart';
 
 Future<Database> openDatabase({
-  String name = 'flow',
+  String name = 'momentum',
   int? version,
   FutureOr<void> Function(Database, int, int)? onUpgrade,
   FutureOr<void> Function(Database, int)? onCreate,

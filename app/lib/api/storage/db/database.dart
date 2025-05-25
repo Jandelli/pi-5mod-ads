@@ -10,7 +10,7 @@ import 'database_stub.dart' if (dart.library.io) 'database_mobile.dart'
     as mobile;
 
 Future<Database> openDatabase({
-  String name = 'flow',
+  String name = 'momentum',
   int? version,
   FutureOr<void> Function(Database, int, int)? onUpgrade,
   FutureOr<void> Function(Database, int)? onCreate,

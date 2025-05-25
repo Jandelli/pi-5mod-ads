@@ -26,7 +26,7 @@ class LocalSourceDialog extends StatelessWidget {
               if (!context.mounted) return;
               exportFile(
                 context: context,
-                fileName: 'flow',
+                fileName: 'momentum',
                 fileExtension: 'db',
                 bytes: data,
                 mimeType: 'application/x-sqlite3',

@@ -36,9 +36,3 @@ class TestingEntry extends StatelessWidget {
     );
   }
 }
-
-// You can add this route to your app's routes to access the testing page
-// For example, in your main.dart:
-// routes: {
-//   '/dbtest': (context) => const TestingEntry(),
-// }

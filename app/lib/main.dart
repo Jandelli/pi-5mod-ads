@@ -27,8 +27,12 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localized_locales/flutter_localized_locales.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'cubits/settings.dart';
+import 'cubits/auth.dart';
+import 'services/auth_service.dart';
+import 'widgets/auth_guard.dart';
 import 'pages/events/page.dart';
 import 'pages/calendar/page.dart';
 import 'pages/dashboard/page.dart';
@@ -58,22 +62,40 @@ Future<void> main(List<String> args) async {
   dataPath = result['path'];
 
   final prefs = await SharedPreferences.getInstance();
+  const secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
+
   final settingsCubit = SettingsCubit(prefs);
+  final authService = AuthService(secureStorage, prefs);
+  final authBloc = AuthBloc(authService);
 
   final sourcesService = SourcesService(settingsCubit);
   await sourcesService.setup();
 
   await setup(settingsCubit, sourcesService);
+
+  // Initialize authentication
+  authBloc.add(AuthCheckRequested());
+
   FlutterNativeSplash.remove();
   runApp(
-    BlocProvider.value(
-      value: settingsCubit,
-      child: RepositoryProvider.value(
-        value: sourcesService,
-        child: BlocProvider(
-            create: (context) => FlowCubit(context.read<SourcesService>()),
-            child: FlowApp()),
-      ),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: settingsCubit),
+        BlocProvider.value(value: authBloc),
+        RepositoryProvider.value(value: sourcesService),
+        RepositoryProvider.value(value: authService),
+        BlocProvider(
+          create: (context) => FlowCubit(context.read<SourcesService>()),
+        ),
+      ],
+      child: FlowApp(),
     ),
   );
 }
@@ -220,7 +242,9 @@ class FlowApp extends StatelessWidget {
                 if (!state.nativeTitleBar) {
                   child = virtualWindowFrameBuilder(context, child);
                 }
-                return child ?? Container();
+                // Wrap with AuthGuard to protect the entire app
+                child = AuthGuard(child: child ?? Container());
+                return child;
               },
               supportedLocales: AppLocalizations.supportedLocales,
             ));
@@ -232,7 +256,7 @@ const isNightly =
     flavor == 'nightly' || flavor == 'dev' || flavor == 'development';
 const shortApplicationName = isNightly ? 'Momentum Nightly' : 'Momentum';
 const applicationMinorVersion = "0.4.3";
-const applicationName = '$shortApplicationName';
+const applicationName = shortApplicationName;
 
 Future<String> getCurrentVersion() async {
   const envVersion = String.fromEnvironment('version');

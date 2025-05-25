@@ -22,6 +22,6 @@ Future<String> getFlowDirectory() async {
   }
   if (Platform.isAndroid) path = (await getExternalStorageDirectory())?.path;
   path ??= (await getApplicationDocumentsDirectory()).path;
-  path += '/Linwood/Flow';
+  path += '/Momentum/Db';
   return path;
 }

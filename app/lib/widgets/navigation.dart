@@ -13,6 +13,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../main.dart';
+import 'user_profile_button.dart';
 
 typedef _NavigationItem = ({
   String title,
@@ -297,6 +298,7 @@ class _FlowDrawer extends StatelessWidget {
                     centerTitle: true,
                     automaticallyImplyLeading: false,
                     actions: [
+                      const UserProfileButton(),
                       IconButton(
                         tooltip: AppLocalizations.of(context).sources,
                         icon: const PhosphorIcon(PhosphorIconsLight.funnel),
