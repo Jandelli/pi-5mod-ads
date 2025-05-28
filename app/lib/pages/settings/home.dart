@@ -7,24 +7,19 @@ import 'package:go_router/go_router.dart';
 import 'package:material_leap/material_leap.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import 'general.dart';
-
 enum SettingsView {
-  general,
   data,
   personalization;
 
   bool get isEnabled => true;
 
   String getLocalizedName(BuildContext context) => switch (this) {
-        SettingsView.general => AppLocalizations.of(context).general,
         SettingsView.data => AppLocalizations.of(context).data,
         SettingsView.personalization =>
           AppLocalizations.of(context).personalization,
       };
 
   IconGetter get icon => switch (this) {
-        SettingsView.general => PhosphorIcons.gear,
         SettingsView.data => PhosphorIcons.database,
         SettingsView.personalization => PhosphorIcons.monitor,
       };
@@ -40,7 +35,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  SettingsView _view = SettingsView.general;
+  SettingsView _view = SettingsView.data;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -120,13 +115,14 @@ class _SettingsPageState extends State<SettingsPage> {
     if (isMobile) {
       return navigation;
     }
-    final content = switch (_view) {
-      SettingsView.general => const GeneralSettingsPage(inView: true),
-      SettingsView.data => const DataSettingsPage(inView: true),
-      SettingsView.personalization => const PersonalizationSettingsPage(
-          inView: true,
-        ),
-    };
+    final Widget content;
+    if (_view == SettingsView.data) {
+      content = const DataSettingsPage(inView: true);
+    } else if (_view == SettingsView.personalization) {
+      content = const PersonalizationSettingsPage(inView: true);
+    } else {
+      content = const SizedBox.shrink();
+    }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

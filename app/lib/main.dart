@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:args/args.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flow/cubits/flow.dart';
@@ -8,7 +7,6 @@ import 'package:flow/pages/alarm/countdown.dart';
 import 'package:flow/pages/alarm/page.dart';
 import 'package:flow/pages/calendar/filter.dart';
 import 'package:flow/pages/settings/data.dart';
-import 'package:flow/pages/settings/general.dart';
 import 'package:flow/pages/settings/home.dart';
 import 'package:flow/pages/settings/personalization.dart';
 import 'package:flow/theme.dart';
@@ -28,10 +26,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localized_locales/flutter_localized_locales.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'cubits/settings.dart';
 import 'cubits/auth.dart';
 import 'services/auth_service.dart';
+import 'services/auth_database_service.dart';
 import 'widgets/auth_guard.dart';
 import 'pages/events/page.dart';
 import 'pages/calendar/page.dart';
@@ -41,7 +39,7 @@ import 'pages/resources/page.dart';
 import 'pages/groups/page.dart';
 import 'pages/users/filter.dart';
 import 'pages/users/page.dart';
-
+import 'pages/ai/page.dart';
 import 'pages/notes/page.dart';
 import 'setup.dart'
     if (dart.library.html) 'setup_web.dart'
@@ -72,11 +70,14 @@ Future<void> main(List<String> args) async {
   );
 
   final settingsCubit = SettingsCubit(prefs);
-  final authService = AuthService(secureStorage, prefs);
-  final authBloc = AuthBloc(authService);
-
   final sourcesService = SourcesService(settingsCubit);
   await sourcesService.setup();
+
+  // Initialize authentication with database service
+  final authDatabaseService =
+      AuthDatabaseService(sourcesService.local, secureStorage);
+  final authService = AuthService(authDatabaseService, prefs);
+  final authBloc = AuthBloc(authService);
 
   await setup(settingsCubit, sourcesService);
 
@@ -106,10 +107,6 @@ final GoRouter _router = GoRouter(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
       routes: [
-        GoRoute(
-          path: 'general',
-          builder: (context, state) => const GeneralSettingsPage(),
-        ),
         GoRoute(
           path: 'data',
           builder: (context, state) => const DataSettingsPage(),
@@ -196,6 +193,10 @@ final GoRouter _router = GoRouter(
                 GoRoute(
                   path: 'sources',
                   builder: (context, state) => const SourcesPage(),
+                ),
+                GoRoute(
+                  path: 'ai',
+                  builder: (context, state) => const AIPage(),
                 ),
               ]),
         ]),

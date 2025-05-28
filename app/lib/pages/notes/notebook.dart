@@ -31,10 +31,13 @@ class NotebookDialog extends StatelessWidget {
     final cubit = context.read<FlowCubit>();
     var currentNotebook = notebook ?? const Notebook();
     var currentSource = source ?? '';
-    final service = cubit.sourcesService.getSource(currentSource);
-    var currentService = service.note;
-    final userConnector = service.eventUser;
-    final groupConnector = service.eventGroup;
+    // Ensure service is fetched safely if currentSource might be empty initially
+    final service = currentSource.isNotEmpty
+        ? cubit.sourcesService.getSource(currentSource)
+        : null;
+    var currentService = service?.note;
+    final userConnector = service?.eventUser;
+    final groupConnector = service?.eventGroup;
     final tabs = !create && userConnector != null && groupConnector != null;
     return ResponsiveAlertDialog(
       title: Text(create
@@ -148,7 +151,9 @@ class NotebookDialog extends StatelessWidget {
                   .pop(SourcedModel(currentSource, currentNotebook));
             }
           },
-          child: Text(AppLocalizations.of(context).create),
+          child: Text(create
+              ? AppLocalizations.of(context).createNotebook
+              : AppLocalizations.of(context).save), // Or a generic "Save"
         ),
       ],
     );

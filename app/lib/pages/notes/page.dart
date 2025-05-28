@@ -28,8 +28,17 @@ class NotesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NotesBodyView(
+      search:
+          '', // Assuming search is handled by _NotesSearchDelegate pushing a new NotesBodyView
       filter: filter,
       parent: parent,
+      onParentNoteDeleted: parent != null
+          ? () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            }
+          : null,
     );
   }
 }
@@ -83,6 +92,7 @@ class NotesBodyView extends StatefulWidget {
   final NoteFilter filter;
   final SourcedModel<Uint8List>? parent;
   final bool showAppBar;
+  final VoidCallback? onParentNoteDeleted; // Added callback
 
   const NotesBodyView({
     super.key,
@@ -90,6 +100,7 @@ class NotesBodyView extends StatefulWidget {
     this.filter = const NoteFilter(),
     this.parent,
     this.showAppBar = true,
+    this.onParentNoteDeleted, // Added callback
   });
 
   @override
@@ -99,13 +110,14 @@ class NotesBodyView extends StatefulWidget {
 class _NotesBodyViewState extends State<NotesBodyView> {
   late final FlowCubit _flowCubit;
   late final SourcedPagingBloc<Note> _bloc;
-  late final Future<Note?> _parent;
+  late Future<Note?> _parent; // Not final, to be updated
   late NoteFilter _filter;
 
   @override
   void initState() {
+    super.initState();
     _flowCubit = context.read<FlowCubit>();
-    _parent = _fetchParent();
+    _parent = _fetchParent(); // Initialize _parent
     _bloc = SourcedPagingBloc.item(
         cubit: _flowCubit,
         fetch: (source, service, offset, limit) async {
@@ -136,36 +148,49 @@ class _NotesBodyViewState extends State<NotesBodyView> {
           return notes;
         });
     _filter = widget.filter;
-    super.initState();
   }
 
   Future<Note?> _fetchParent() async {
     if (widget.parent == null) return null;
-    final parent = await _flowCubit
+    final parentNote = await _flowCubit
         .getService(widget.parent!.source)
         .note
         ?.getNote(widget.parent!.model);
-    return parent;
+    return parentNote;
   }
 
   @override
   void dispose() {
-    super.dispose();
     _bloc.close();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant NotesBodyView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.search != widget.search ||
-        oldWidget.parent != widget.parent) {
-      _bloc.refresh();
+    bool needsBlocRefresh = false;
+
+    if (oldWidget.search != widget.search) {
+      needsBlocRefresh = true;
     }
+
+    if (oldWidget.parent != widget.parent) {
+      setState(() {
+        // Update _parent future when widget.parent changes
+        _parent = _fetchParent();
+      });
+      needsBlocRefresh = true;
+    }
+
     if (oldWidget.filter != widget.filter) {
       setState(() {
         _filter = widget.filter;
       });
+      needsBlocRefresh = true;
+    }
+
+    if (needsBlocRefresh) {
       _bloc.refresh();
     }
   }
@@ -222,6 +247,8 @@ class _NotesBodyViewState extends State<NotesBodyView> {
                       bloc: _bloc,
                       source: widget.parent!.source,
                       note: data,
+                      onNoteDeleted:
+                          widget.onParentNoteDeleted, // Pass the callback
                     ),
                   ],
                 );
@@ -244,9 +271,12 @@ class _NotesBodyViewState extends State<NotesBodyView> {
                     parentId: widget.parent?.model,
                     notebookId: _filter.notebook,
                   ),
-                  source: widget.parent?.source,
+                  source: widget.parent
+                      ?.source, // Changed: Do not fallback to _filter.source
                   create: true,
-                )).then((_) => _bloc.refresh()),
+                )).then((newlyCreatedSourcedNote) {
+          _bloc.refresh();
+        }),
         label: Text(AppLocalizations.of(context).create),
         icon: const PhosphorIcon(PhosphorIconsLight.plus),
       ),

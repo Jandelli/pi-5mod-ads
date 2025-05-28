@@ -28,8 +28,9 @@ class LabelDialog extends StatelessWidget {
     final create = this.create || label == null || source == null;
     var currentLabel = label ?? const Label();
     var currentSource = source ?? '';
-    var currentService =
-        context.read<FlowCubit>().getService(currentSource).label;
+    var currentService = currentSource.isNotEmpty
+        ? context.read<FlowCubit>().getService(currentSource).label
+        : null;
     return AlertDialog(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -116,7 +117,9 @@ class LabelDialog extends StatelessWidget {
                   .pop(SourcedModel(currentSource, currentLabel));
             }
           },
-          child: Text(AppLocalizations.of(context).save),
+          child: Text(create
+              ? AppLocalizations.of(context).createLabel
+              : AppLocalizations.of(context).save), // Or a generic "Save"
         ),
       ],
     );

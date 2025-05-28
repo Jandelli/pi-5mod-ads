@@ -29,6 +29,7 @@ import '../models/resource/database.dart';
 import '../models/user/database.dart';
 import '../models/group/database.dart';
 import '../models/note/database.dart';
+import '../models/auth/database.dart';
 
 typedef DatabaseFactory = Future<Database> Function({
   String name,
@@ -41,6 +42,10 @@ const databaseVersion = 4;
 
 class DatabaseService extends SourceService {
   late final Database db;
+
+  // Authentication service
+  final AuthDatabaseServiceImpl auth = AuthDatabaseServiceImpl();
+
   @override
   final EventDatabaseService event = EventDatabaseService();
   @override
@@ -118,7 +123,7 @@ class DatabaseService extends SourceService {
     }
   }
 
-  List<TableService> get tables => [...models.cast<TableService>()];
+  List<TableService> get tables => [auth, ...models.cast<TableService>()];
 
   FutureOr<void> _onCreate(Database db, int version) async {
     for (var table in tables) {

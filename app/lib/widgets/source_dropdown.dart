@@ -8,13 +8,13 @@ import 'package:flow_api/services/source.dart';
 import '../cubits/flow.dart';
 
 class SourceDropdown<T> extends StatelessWidget {
-  final String value;
+  final String? value; // Changed to nullable
   final ValueChanged<ConnectedModel<String, T>?> onChanged;
   final T? Function(SourceService) buildService;
 
   const SourceDropdown({
     super.key,
-    required this.value,
+    required this.value, // Now accepts null
     required this.onChanged,
     required this.buildService,
   });
@@ -32,25 +32,38 @@ class SourceDropdown<T> extends StatelessWidget {
         })
         .nonNulls
         .toList());
+
     return Column(
       children: [
         const SizedBox(height: 16),
         DropdownMenu<String>(
           initialSelection: value,
-          dropdownMenuEntries: services.entries.map((value) {
-            final remote = cubit.sourcesService.getRemote(value.key);
+          hintText:
+              AppLocalizations.of(context).selectASource, // Added hint text
+          dropdownMenuEntries: services.entries.map((entry) {
+            final remote = cubit.sourcesService.getRemote(entry.key);
             return DropdownMenuEntry<String>(
-              value: value.key,
-              label: remote?.displayName ?? AppLocalizations.of(context).local,
+              value: entry.key,
+              label: entry.key == ''
+                  ? AppLocalizations.of(context).local
+                  : remote?.displayName ??
+                      entry
+                          .key, // Fallback to key if display name is null for non-local
             );
           }).toList(),
-          onSelected: (value) {
-            final service = services[value];
+          onSelected: (selectedValue) {
+            // selectedValue can be null if an entry with null value is somehow selected,
+            // or if future Flutter versions allow clearing selection.
+            if (selectedValue == null) {
+              onChanged(null);
+              return;
+            }
+            final service = services[selectedValue];
             onChanged(
               service == null
                   ? null
                   : ConnectedModel(
-                      value!,
+                      selectedValue,
                       service,
                     ),
             );

@@ -28,7 +28,7 @@ class NoteDialog extends StatefulWidget {
 
 class _NoteDialogState extends State<NoteDialog> {
   late Note _newNote;
-  late String _newSource;
+  late String? _newSource; // Made nullable
   NoteService? _service;
 
   @override
@@ -36,14 +36,17 @@ class _NoteDialogState extends State<NoteDialog> {
     super.initState();
 
     _newNote = widget.note ?? const Note();
-    _newSource = widget.source ?? '';
-    _service = context.read<FlowCubit>().getService(_newSource).note;
+    _newSource = widget.source; // Initialize with widget.source
+
+    if (_newSource != null && _newSource!.isNotEmpty) {
+      _service = context.read<FlowCubit>().getService(_newSource!).note;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final create =
-        widget.create || widget.note == null || widget.source == null;
+        widget.create || widget.note == null; // Simplified create condition
     return ResponsiveAlertDialog(
       title: Text(
         create
@@ -67,12 +70,15 @@ class _NoteDialogState extends State<NoteDialog> {
       content: ListView(
         shrinkWrap: true,
         children: [
-          if (widget.source == null) ...[
+          if (widget.create && widget.source == null) ...[
+            // Modified condition
             SourceDropdown<NoteService>(
-              value: _newSource,
+              value: _newSource ?? '', // Provide a default empty string
               onChanged: (connected) {
-                _newSource = connected?.source ?? '';
-                _service = connected?.model;
+                setState(() {
+                  _newSource = connected?.source; // Update to potentially null
+                  _service = connected?.model;
+                });
               },
               buildService: (e) => e.note,
             ),
@@ -129,21 +135,47 @@ class _NoteDialogState extends State<NoteDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            });
           },
           child: Text(AppLocalizations.of(context).cancel),
         ),
         ElevatedButton(
-          onPressed: () async {
-            final navigator = Navigator.of(context);
-            Note? created;
-            if (create) {
-              created = await _service?.createNote(_newNote);
-            } else {
-              await _service?.updateNote(_newNote);
-            }
-            navigator.pop(SourcedModel(_newSource, created));
-          },
+          onPressed: (widget.create &&
+                  (_service == null || _newSource == null)) // Updated condition
+              ? null
+              : () async {
+                  SourcedModel<Note>? resultForPop;
+
+                  if (create) {
+                    // Ensure _newSource is not null before proceeding
+                    if (_newSource == null) return;
+                    final Note? createdNote =
+                        await _service?.createNote(_newNote);
+                    if (createdNote != null) {
+                      resultForPop = SourcedModel(_newSource!, createdNote);
+                    }
+                  } else {
+                    // Ensure _newSource is not null for updates if it's part of SourcedModel
+                    if (_newSource == null && widget.source == null) {
+                      return; // Or handle error
+                    }
+                    await _service?.updateNote(_newNote);
+                    resultForPop =
+                        SourcedModel(_newSource ?? widget.source!, _newNote);
+                  }
+
+                  if (mounted) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        Navigator.of(context).pop(resultForPop);
+                      }
+                    });
+                  }
+                },
           child: Text(create
               ? AppLocalizations.of(context).create
               : AppLocalizations.of(context).save),

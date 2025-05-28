@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/auth.dart';
 import '../pages/auth/login_page.dart';
+import '../pages/auth/registration_page.dart';
 
-class AuthGuard extends StatelessWidget {
+class AuthGuard extends StatefulWidget {
   final Widget child;
 
   const AuthGuard({
@@ -12,17 +13,52 @@ class AuthGuard extends StatelessWidget {
   });
 
   @override
+  State<AuthGuard> createState() => _AuthGuardState();
+}
+
+class _AuthGuardState extends State<AuthGuard> {
+  bool _showRegistration = false;
+
+  void _toggleAuthMode() {
+    setState(() {
+      _showRegistration = !_showRegistration;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is AuthInitial || state is AuthLoading) {
           return const _SplashScreen();
         } else if (state is AuthAuthenticated) {
-          return child;
+          return widget.child;
         } else {
-          return const LoginPage();
+          return _showRegistration
+              ? AuthPageWrapper(
+                  child: RegistrationPage(onBackToLogin: _toggleAuthMode),
+                )
+              : AuthPageWrapper(
+                  child: LoginPage(onCreateAccount: _toggleAuthMode),
+                );
         }
       },
+    );
+  }
+}
+
+class AuthPageWrapper extends StatelessWidget {
+  final Widget child;
+
+  const AuthPageWrapper({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: child,
     );
   }
 }

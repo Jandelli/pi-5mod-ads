@@ -4,42 +4,88 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../cubits/auth.dart';
 import '../../models/auth/user.dart';
 
-class LoginPage extends StatefulWidget {
-  final VoidCallback? onCreateAccount;
+class RegistrationPage extends StatefulWidget {
+  final VoidCallback? onBackToLogin;
 
-  const LoginPage({
+  const RegistrationPage({
     super.key,
-    this.onCreateAccount,
+    this.onBackToLogin,
   });
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _displayNameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
-  bool _rememberMe = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
+    _displayNameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleRegistration() {
     if (_formKey.currentState?.validate() ?? false) {
-      final credentials = LoginCredentials(
+      final credentials = RegistrationCredentials(
         username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
-        rememberMe: _rememberMe,
+        displayName: _displayNameController.text.trim().isEmpty
+            ? null
+            : _displayNameController.text.trim(),
       );
 
-      context.read<AuthBloc>().add(AuthLoginRequested(credentials));
+      context.read<AuthBloc>().add(AuthRegisterRequested(credentials));
     }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your email';
+    }
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Please enter a valid email address';
+    }
+
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+
+    return null;
   }
 
   @override
@@ -52,6 +98,14 @@ class _LoginPageState extends State<LoginPage> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          } else if (state is AuthAuthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Welcome ${state.user.name}! Registration successful.'),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
             );
           }
@@ -82,14 +136,14 @@ class _LoginPageState extends State<LoginPage> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
-                                PhosphorIconsLight.signIn,
+                                PhosphorIconsLight.userPlus,
                                 color: Theme.of(context).colorScheme.onPrimary,
                                 size: 40,
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Momentum',
+                              'Create Account',
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineMedium
@@ -101,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Sign in to your account',
+                              'Join Momentum today',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -118,18 +172,51 @@ class _LoginPageState extends State<LoginPage> {
                         // Username Field
                         TextFormField(
                           controller: _usernameController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: 'Username',
-                            prefixIcon:
-                                const PhosphorIcon(PhosphorIconsLight.user),
-                            border: const OutlineInputBorder(),
+                            prefixIcon: PhosphorIcon(PhosphorIconsLight.user),
+                            border: OutlineInputBorder(),
+                            helperText: 'Choose a unique username',
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter your username';
+                              return 'Please enter a username';
+                            }
+                            if (value.trim().length < 3) {
+                              return 'Username must be at least 3 characters long';
                             }
                             return null;
                           },
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Email Field
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon:
+                                PhosphorIcon(PhosphorIconsLight.envelope),
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: _validateEmail,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Display Name Field (Optional)
+                        TextFormField(
+                          controller: _displayNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Display Name (Optional)',
+                            prefixIcon: PhosphorIcon(
+                                PhosphorIconsLight.identificationCard),
+                            border: OutlineInputBorder(),
+                            helperText:
+                                'Your full name or preferred display name',
+                          ),
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
@@ -155,39 +242,49 @@ class _LoginPageState extends State<LoginPage> {
                               },
                             ),
                             border: const OutlineInputBorder(),
+                            helperText: 'At least 6 characters',
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            return null;
-                          },
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _handleLogin(),
+                          validator: _validatePassword,
+                          textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
-                        // Remember Me Checkbox
-                        CheckboxListTile(
-                          value: _rememberMe,
-                          onChanged: (value) {
-                            setState(() {
-                              _rememberMe = value ?? false;
-                            });
-                          },
-                          title: const Text('Remember me'),
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
+                        // Confirm Password Field
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: !_isConfirmPasswordVisible,
+                          decoration: InputDecoration(
+                            labelText: 'Confirm Password',
+                            prefixIcon:
+                                const PhosphorIcon(PhosphorIconsLight.lockKey),
+                            suffixIcon: IconButton(
+                              icon: PhosphorIcon(
+                                _isConfirmPasswordVisible
+                                    ? PhosphorIconsLight.eyeSlash
+                                    : PhosphorIconsLight.eye,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isConfirmPasswordVisible =
+                                      !_isConfirmPasswordVisible;
+                                });
+                              },
+                            ),
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: _validateConfirmPassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _handleRegistration(),
                         ),
                         const SizedBox(height: 24),
 
-                        // Login Button
+                        // Registration Button
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
                             final isLoading = state is AuthLoading;
 
                             return ElevatedButton(
-                              onPressed: isLoading ? null : _handleLogin,
+                              onPressed: isLoading ? null : _handleRegistration,
                               style: ElevatedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16),
@@ -210,27 +307,18 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                     )
                                   : const Text(
-                                      'Sign In',
+                                      'Create Account',
                                       style: TextStyle(fontSize: 16),
                                     ),
                             );
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                        // Sign Up Button
-                        OutlinedButton(
-                          onPressed: widget.onCreateAccount,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Create New Account',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                        // Back to Login
+                        TextButton(
+                          onPressed: widget.onBackToLogin,
+                          child: const Text('Already have an account? Sign in'),
                         ),
                       ],
                     ),

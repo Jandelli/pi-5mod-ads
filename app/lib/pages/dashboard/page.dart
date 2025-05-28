@@ -4,6 +4,7 @@ import 'package:flow/widgets/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flow/src/generated/i18n/app_localizations.dart';
 import 'package:material_leap/helpers.dart';
+import 'package:go_router/go_router.dart'; // Add this import
 
 import 'events.dart';
 
@@ -49,6 +50,14 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                 )),
+                const SizedBox(height: 16), // Added for spacing
+                ElevatedButton(
+                  onPressed: () {
+                    context.go('/ai'); // Navigate to AI page
+                  },
+                  child: const Text('Resumo de IA'),
+                ),
+                const SizedBox(height: 16), // Added for spacing
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),

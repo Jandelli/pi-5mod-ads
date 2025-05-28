@@ -304,6 +304,149 @@ class _LoginCredentialsCopyWithImpl<$R, $Out>
       _LoginCredentialsCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
+class RegistrationCredentialsMapper
+    extends ClassMapperBase<RegistrationCredentials> {
+  RegistrationCredentialsMapper._();
+
+  static RegistrationCredentialsMapper? _instance;
+  static RegistrationCredentialsMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals
+          .use(_instance = RegistrationCredentialsMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'RegistrationCredentials';
+
+  static String _$username(RegistrationCredentials v) => v.username;
+  static const Field<RegistrationCredentials, String> _f$username =
+      Field('username', _$username);
+  static String _$email(RegistrationCredentials v) => v.email;
+  static const Field<RegistrationCredentials, String> _f$email =
+      Field('email', _$email);
+  static String _$password(RegistrationCredentials v) => v.password;
+  static const Field<RegistrationCredentials, String> _f$password =
+      Field('password', _$password);
+  static String? _$displayName(RegistrationCredentials v) => v.displayName;
+  static const Field<RegistrationCredentials, String> _f$displayName =
+      Field('displayName', _$displayName, opt: true);
+
+  @override
+  final MappableFields<RegistrationCredentials> fields = const {
+    #username: _f$username,
+    #email: _f$email,
+    #password: _f$password,
+    #displayName: _f$displayName,
+  };
+
+  static RegistrationCredentials _instantiate(DecodingData data) {
+    return RegistrationCredentials(
+        username: data.dec(_f$username),
+        email: data.dec(_f$email),
+        password: data.dec(_f$password),
+        displayName: data.dec(_f$displayName));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static RegistrationCredentials fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<RegistrationCredentials>(map);
+  }
+
+  static RegistrationCredentials fromJson(String json) {
+    return ensureInitialized().decodeJson<RegistrationCredentials>(json);
+  }
+}
+
+mixin RegistrationCredentialsMappable {
+  String toJson() {
+    return RegistrationCredentialsMapper.ensureInitialized()
+        .encodeJson<RegistrationCredentials>(this as RegistrationCredentials);
+  }
+
+  Map<String, dynamic> toMap() {
+    return RegistrationCredentialsMapper.ensureInitialized()
+        .encodeMap<RegistrationCredentials>(this as RegistrationCredentials);
+  }
+
+  RegistrationCredentialsCopyWith<RegistrationCredentials,
+          RegistrationCredentials, RegistrationCredentials>
+      get copyWith => _RegistrationCredentialsCopyWithImpl<
+              RegistrationCredentials, RegistrationCredentials>(
+          this as RegistrationCredentials, $identity, $identity);
+  @override
+  String toString() {
+    return RegistrationCredentialsMapper.ensureInitialized()
+        .stringifyValue(this as RegistrationCredentials);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return RegistrationCredentialsMapper.ensureInitialized()
+        .equalsValue(this as RegistrationCredentials, other);
+  }
+
+  @override
+  int get hashCode {
+    return RegistrationCredentialsMapper.ensureInitialized()
+        .hashValue(this as RegistrationCredentials);
+  }
+}
+
+extension RegistrationCredentialsValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, RegistrationCredentials, $Out> {
+  RegistrationCredentialsCopyWith<$R, RegistrationCredentials, $Out>
+      get $asRegistrationCredentials => $base.as((v, t, t2) =>
+          _RegistrationCredentialsCopyWithImpl<$R, $Out>(v, t, t2));
+}
+
+abstract class RegistrationCredentialsCopyWith<
+    $R,
+    $In extends RegistrationCredentials,
+    $Out> implements ClassCopyWith<$R, $In, $Out> {
+  $R call(
+      {String? username, String? email, String? password, String? displayName});
+  RegistrationCredentialsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+      Then<$Out2, $R2> t);
+}
+
+class _RegistrationCredentialsCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, RegistrationCredentials, $Out>
+    implements
+        RegistrationCredentialsCopyWith<$R, RegistrationCredentials, $Out> {
+  _RegistrationCredentialsCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<RegistrationCredentials> $mapper =
+      RegistrationCredentialsMapper.ensureInitialized();
+  @override
+  $R call(
+          {String? username,
+          String? email,
+          String? password,
+          Object? displayName = $none}) =>
+      $apply(FieldCopyWithData({
+        if (username != null) #username: username,
+        if (email != null) #email: email,
+        if (password != null) #password: password,
+        if (displayName != $none) #displayName: displayName
+      }));
+  @override
+  RegistrationCredentials $make(CopyWithData data) => RegistrationCredentials(
+      username: data.get(#username, or: $value.username),
+      email: data.get(#email, or: $value.email),
+      password: data.get(#password, or: $value.password),
+      displayName: data.get(#displayName, or: $value.displayName));
+
+  @override
+  RegistrationCredentialsCopyWith<$R2, RegistrationCredentials, $Out2>
+      $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+          _RegistrationCredentialsCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
 class AuthSessionMapper extends ClassMapperBase<AuthSession> {
   AuthSessionMapper._();
 

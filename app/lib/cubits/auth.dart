@@ -26,6 +26,15 @@ class AuthLoginRequested extends AuthEvent {
   List<Object> get props => [credentials];
 }
 
+class AuthRegisterRequested extends AuthEvent {
+  final RegistrationCredentials credentials;
+
+  const AuthRegisterRequested(this.credentials);
+
+  @override
+  List<Object> get props => [credentials];
+}
+
 class AuthLogoutRequested extends AuthEvent {}
 
 class AuthUserUpdated extends AuthEvent {
@@ -95,6 +104,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
+    on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
     on<AuthUserUpdated>(_onAuthUserUpdated);
   }
@@ -137,6 +147,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ));
       } else {
         emit(const AuthError('Login failed'));
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    try {
+      final user = await _authService.register(event.credentials);
+      if (user != null && _authService.currentSession != null) {
+        emit(AuthAuthenticated(
+          user: user,
+          session: _authService.currentSession!,
+        ));
+      } else {
+        emit(const AuthError('Registration failed'));
       }
     } catch (e) {
       emit(AuthError(e.toString()));

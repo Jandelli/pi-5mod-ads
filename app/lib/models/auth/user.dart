@@ -44,6 +44,21 @@ class LoginCredentials with LoginCredentialsMappable {
 }
 
 @MappableClass()
+class RegistrationCredentials with RegistrationCredentialsMappable {
+  final String username;
+  final String email;
+  final String password;
+  final String? displayName;
+
+  const RegistrationCredentials({
+    required this.username,
+    required this.email,
+    required this.password,
+    this.displayName,
+  });
+}
+
+@MappableClass()
 class AuthSession with AuthSessionMappable {
   final String token;
   final AuthUser user;

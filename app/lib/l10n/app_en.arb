@@ -10,6 +10,7 @@
   "create": "Create",
   "information": "Information",
   "source": "Source",
+  "selectASource": "Select a source",
   "license": "License",
   "thirdPartyLicenses": "Third Party Licenses",
   "documentation": "Documentation",

@@ -23,12 +23,14 @@ class NoteDetailsView extends StatefulWidget {
   final String source;
   final Note note;
   final SourcedPagingBloc<Note> bloc;
+  final VoidCallback? onNoteDeleted; // Add this
 
   const NoteDetailsView({
     super.key,
     required this.source,
     required this.note,
     required this.bloc,
+    this.onNoteDeleted, // Add this
   });
 
   @override
@@ -201,8 +203,11 @@ class _NoteDetailsViewState extends State<NoteDetailsView> {
                       PhosphorIconsLight.trash,
                       AppLocalizations.of(context).delete,
                       () async {
-                        await _noteService?.deleteNote(_newNote.id!);
-                        widget.bloc.refresh();
+                        if (_newNote.id != null) {
+                          await _noteService?.deleteNote(_newNote.id!);
+                          widget.bloc.refresh();
+                          widget.onNoteDeleted?.call(); // Call the callback
+                        }
                       }
                     )
                   ]

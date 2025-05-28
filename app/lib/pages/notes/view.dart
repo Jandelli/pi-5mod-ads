@@ -120,16 +120,17 @@ class _NotesViewState<T extends DescriptiveModel> extends State<NotesView<T>> {
                 label: Text(AppLocalizations.of(context).link),
                 icon: const PhosphorIcon(PhosphorIconsLight.link),
                 onPressed: () async {
-                  final note = await showDialog<SourcedModel<Note>>(
+                  final sourcedNote = await showDialog<SourcedModel<Note>>(
                     context: context,
                     builder: (context) => NoteSelectDialog(
                       source: widget.source,
                     ),
                   );
-                  if (note != null) {
+                  if (sourcedNote != null) {
                     await widget.connector
-                        .connect(widget.model.id!, note.model.id!);
+                        .connect(widget.model.id!, sourcedNote.model.id!);
                   }
+                  // Always refresh for now, as addSourced is not available.
                   _bloc.refresh();
                 },
               ),
