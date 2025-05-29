@@ -34,7 +34,7 @@ class UserProfileButton extends StatelessWidget {
                   )
                 : null,
           ),
-          tooltip: 'User Menu',
+          tooltip: 'Menu do Usuário',
           onSelected: (value) {
             switch (value) {
               case 'profile':
@@ -50,7 +50,7 @@ class UserProfileButton extends StatelessWidget {
               value: 'profile',
               child: ListTile(
                 leading: const PhosphorIcon(PhosphorIconsLight.user),
-                title: const Text('Profile'),
+                title: const Text('Perfil'),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -59,7 +59,7 @@ class UserProfileButton extends StatelessWidget {
               value: 'logout',
               child: ListTile(
                 leading: const PhosphorIcon(PhosphorIconsLight.signOut),
-                title: const Text('Logout'),
+                title: const Text('Sair'),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -73,21 +73,21 @@ class UserProfileButton extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('User Profile'),
+        title: const Text('Perfil do Usuário'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ProfileRow(label: 'Name', value: user.name),
-            _ProfileRow(label: 'Username', value: user.username),
+            _ProfileRow(label: 'Nome', value: user.name),
+            _ProfileRow(label: 'Usuário', value: user.username),
             _ProfileRow(label: 'Email', value: user.email),
-            _ProfileRow(label: 'Roles', value: user.roles.join(', ')),
+            _ProfileRow(label: 'Funções', value: user.roles.join(', ')),
             _ProfileRow(
-              label: 'Member Since',
+              label: 'Membro Desde',
               value: _formatDate(user.createdAt),
             ),
             _ProfileRow(
-              label: 'Last Login',
+              label: 'Último Acesso',
               value: _formatDate(user.lastLoginAt),
             ),
           ],
@@ -95,7 +95,7 @@ class UserProfileButton extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: const Text('Fechar'),
           ),
         ],
       ),
@@ -106,12 +106,12 @@ class UserProfileButton extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Sair'),
+        content: const Text('Tem certeza que deseja sair?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -122,7 +122,7 @@ class UserProfileButton extends StatelessWidget {
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
-            child: const Text('Logout'),
+            child: const Text('Sair'),
           ),
         ],
       ),

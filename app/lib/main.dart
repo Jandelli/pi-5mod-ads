@@ -26,11 +26,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localized_locales/flutter_localized_locales.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'cubits/settings.dart';
-import 'cubits/auth.dart';
-import 'services/auth_service.dart';
-import 'services/auth_database_service.dart';
-import 'widgets/auth_guard.dart';
+import 'package:flow/cubits/settings.dart';
+import 'package:flow/cubits/auth.dart';
+import 'package:flow/services/auth_service.dart';
+import 'package:flow/services/auth_database_service.dart';
+import 'package:flow/setup/service_locator.dart' as setup_locator;
+import 'package:flow/blocs/ai/ai_bloc.dart';
+import 'package:flow/widgets/auth_guard.dart';
 import 'pages/events/page.dart';
 import 'pages/calendar/page.dart';
 import 'pages/dashboard/page.dart';
@@ -81,6 +83,9 @@ Future<void> main(List<String> args) async {
 
   await setup(settingsCubit, sourcesService);
 
+  // Initialize proper AI service locator
+  setup_locator.setupServiceLocator();
+
   // Initialize authentication
   authBloc.add(AuthCheckRequested());
 
@@ -94,6 +99,16 @@ Future<void> main(List<String> args) async {
         RepositoryProvider.value(value: authService),
         BlocProvider(
           create: (context) => FlowCubit(context.read<SourcesService>()),
+        ),
+        BlocProvider(
+          create: (context) {
+            final sourcesService = context.read<SourcesService>();
+            // Get the local source service for AI operations
+            final sourceService = sourcesService.getSource('');
+            return setup_locator.serviceLocator<AiBloc>(
+              param1: sourceService,
+            );
+          },
         ),
       ],
       child: FlowApp(),

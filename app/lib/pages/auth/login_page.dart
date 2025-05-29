@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Sign in to your account',
+                              'Entre na sua conta',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -119,14 +119,14 @@ class _LoginPageState extends State<LoginPage> {
                         TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Usuário',
                             prefixIcon:
                                 const PhosphorIcon(PhosphorIconsLight.user),
                             border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter your username';
+                              return 'Por favor, digite seu usuário';
                             }
                             return null;
                           },
@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: 'Senha',
                             prefixIcon:
                                 const PhosphorIcon(PhosphorIconsLight.lock),
                             suffixIcon: IconButton(
@@ -158,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
+                              return 'Por favor, digite sua senha';
                             }
                             return null;
                           },
@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                               _rememberMe = value ?? false;
                             });
                           },
-                          title: const Text('Remember me'),
+                          title: const Text('Lembrar-me'),
                           contentPadding: EdgeInsets.zero,
                           controlAffinity: ListTileControlAffinity.leading,
                         ),
@@ -210,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                     )
                                   : const Text(
-                                      'Sign In',
+                                      'Entrar',
                                       style: TextStyle(fontSize: 16),
                                     ),
                             );
@@ -228,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           child: const Text(
-                            'Create New Account',
+                            'Criar Nova Conta',
                             style: TextStyle(fontSize: 16),
                           ),
                         ),

@@ -55,6 +55,12 @@ List<_NavigationItem?> _getNavigationItems(BuildContext context) => [
         onTap: null,
       ),
       (
+        title: "Assistente de IA",
+        icon: PhosphorIcons.robot,
+        link: "/ai",
+        onTap: null,
+      ),
+      (
         title: AppLocalizations.of(context).resources,
         icon: PhosphorIcons.cube,
         link: "/resources",

@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   sqflite_common: ^2.5.4
+  crypto: ^3.0.2
   collection: ^1.17.2
   web_socket_channel: ^3.0.1
   dart_mappable: ^4.3.0

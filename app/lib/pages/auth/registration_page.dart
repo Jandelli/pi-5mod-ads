@@ -53,12 +53,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
+      return 'Por favor, digite seu e-mail';
     }
 
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
+      return 'Por favor, digite um endereço de e-mail válido';
     }
 
     return null;
@@ -66,11 +66,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a password';
+      return 'Por favor, digite uma senha';
     }
 
     if (value.length < 6) {
-      return 'Password must be at least 6 characters long';
+      return 'A senha deve ter pelo menos 6 caracteres';
     }
 
     return null;
@@ -78,11 +78,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return 'Por favor, confirme sua senha';
     }
 
     if (value != _passwordController.text) {
-      return 'Passwords do not match';
+      return 'As senhas não coincidem';
     }
 
     return null;
@@ -104,7 +104,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Welcome ${state.user.name}! Registration successful.'),
+                    'Bem-vindo ${state.user.name}! Registro realizado com sucesso.'),
                 backgroundColor: Theme.of(context).colorScheme.primary,
               ),
             );
@@ -143,7 +143,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Create Account',
+                              'Criar Conta',
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineMedium
@@ -155,7 +155,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Join Momentum today',
+                              'Junte-se ao Momentum hoje',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -173,17 +173,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         TextFormField(
                           controller: _usernameController,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Usuário',
                             prefixIcon: PhosphorIcon(PhosphorIconsLight.user),
                             border: OutlineInputBorder(),
-                            helperText: 'Choose a unique username',
+                            helperText: 'Escolha um nome de usuário único',
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter a username';
+                              return 'Por favor, digite um nome de usuário';
                             }
                             if (value.trim().length < 3) {
-                              return 'Username must be at least 3 characters long';
+                              return 'O nome de usuário deve ter pelo menos 3 caracteres';
                             }
                             return null;
                           },
@@ -210,12 +210,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         TextFormField(
                           controller: _displayNameController,
                           decoration: const InputDecoration(
-                            labelText: 'Display Name (Optional)',
+                            labelText: 'Nome de Exibição (Opcional)',
                             prefixIcon: PhosphorIcon(
                                 PhosphorIconsLight.identificationCard),
                             border: OutlineInputBorder(),
-                            helperText:
-                                'Your full name or preferred display name',
+                            helperText: 'Seu nome completo ou nome preferido',
                           ),
                           textInputAction: TextInputAction.next,
                         ),
@@ -226,7 +225,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: 'Senha',
                             prefixIcon:
                                 const PhosphorIcon(PhosphorIconsLight.lock),
                             suffixIcon: IconButton(
@@ -242,7 +241,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               },
                             ),
                             border: const OutlineInputBorder(),
-                            helperText: 'At least 6 characters',
+                            helperText: 'Mínimo de 6 caracteres',
                           ),
                           validator: _validatePassword,
                           textInputAction: TextInputAction.next,
@@ -254,7 +253,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           controller: _confirmPasswordController,
                           obscureText: !_isConfirmPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: 'Confirm Password',
+                            labelText: 'Confirmar Senha',
                             prefixIcon:
                                 const PhosphorIcon(PhosphorIconsLight.lockKey),
                             suffixIcon: IconButton(
@@ -307,7 +306,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                       ),
                                     )
                                   : const Text(
-                                      'Create Account',
+                                      'Criar Conta',
                                       style: TextStyle(fontSize: 16),
                                     ),
                             );
@@ -318,7 +317,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         // Back to Login
                         TextButton(
                           onPressed: widget.onBackToLogin,
-                          child: const Text('Already have an account? Sign in'),
+                          child: const Text('Já tem uma conta? Entre aqui'),
                         ),
                       ],
                     ),
