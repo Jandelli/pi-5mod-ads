@@ -20,11 +20,11 @@ class LocalSourceDialog extends StatelessWidget {
             title: Text(AppLocalizations.of(context).export),
             leading: const PhosphorIcon(PhosphorIconsLight.download),
             onTap: () async {
-              Navigator.of(context).pop();
               final db = context.read<SourcesService>().local.db;
               final data = await exportDatabase(db);
               if (!context.mounted) return;
-              exportFile(
+              // Call exportFile BEFORE popping the dialog
+              await exportFile(
                 context: context,
                 fileName: 'momentum',
                 fileExtension: 'db',
@@ -33,6 +33,8 @@ class LocalSourceDialog extends StatelessWidget {
                 uniformTypeIdentifier: 'public.database',
                 label: 'Database',
               );
+              if (!context.mounted) return;
+              Navigator.of(context).pop(); // Pop the dialog AFTER exportFile
             }),
         const Divider(),
         ListTile(

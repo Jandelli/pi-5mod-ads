@@ -32,19 +32,19 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    ndkVersion "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
 
     defaultConfig {
-        applicationId "dev.linwood.flow"
+        applicationId "com.momentum.app"
         minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -57,19 +57,10 @@ android {
         production {
             dimension "default"
             applicationIdSuffix ""
-            manifestPlaceholders = [appName: "Flow"]
-        }
-        development {
-            dimension "default"
-            applicationIdSuffix ""
-            manifestPlaceholders = [appName: "Flow Nightly"]
-        }
-        nightly {
-            dimension "default"
-            applicationIdSuffix ".nightly"
-            manifestPlaceholders = [appName: "Flow Nightly"]
+            manifestPlaceholders = [appName: "Momentum"]
         }
     }
+    
     signingConfigs {
         release {
             keyAlias keystoreProperties['keyAlias']
@@ -78,9 +69,9 @@ android {
             storePassword keystoreProperties['storePassword']
         }
     }
+    
     buildTypes {
         release {
-            // Signing with the debug keys for now, so `flutter run --release` works.
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
@@ -88,7 +79,8 @@ android {
             }
         }
     }
-    namespace 'dev.linwood.flow'
+    
+    namespace 'com.momentum.app'
 }
 
 flutter {

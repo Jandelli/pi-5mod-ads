@@ -206,29 +206,58 @@ class OpenAIService {
       throw Exception(
           'OpenAI response "content" item is missing "text" field.');
     }
-    final String content = firstContentElement['text'] as String;
+    final String rawAiOutput = firstContentElement['text'] as String;
+
+    String parsableJsonString = rawAiOutput.trim();
+
+    // Attempt to extract JSON object from the string
+    // This handles cases where the JSON might be wrapped in text or markdown
+    int startIndex = parsableJsonString.indexOf('{');
+    int endIndex = parsableJsonString.lastIndexOf('}');
+
+    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+      parsableJsonString =
+          parsableJsonString.substring(startIndex, endIndex + 1);
+    } else {
+      // If no '{' or '}' found, or in wrong order, it's unlikely to be JSON.
+      // Log this situation. The original rawAiOutput will be used in the fallback if parsing fails.
+      print(
+          'Could not find valid JSON structure markers ({}) in AI output. Attempting to parse as is.');
+      // parsableJsonString remains rawAiOutput.trim()
+    }
 
     try {
-      // Try to parse as JSON first (as the prompt requests JSON)
-      final jsonData = jsonDecode(content);
+      // Try to parse the potentially cleaned JSON string
+      final jsonData = jsonDecode(parsableJsonString);
 
       return AISummaryResponse(
-        summary: jsonData['summary'] ?? 'Resumo não disponível.',
-        keyHighlights: List<String>.from(jsonData['keyHighlights'] ?? []),
-        upcomingPriorities:
-            List<String>.from(jsonData['upcomingPriorities'] ?? []),
-        motivation:
-            jsonData['motivation'] ?? 'Continue seu excelente trabalho!',
+        summary: jsonData['summary']?.toString() ?? 'Resumo não disponível.',
+        keyHighlights: (jsonData['keyHighlights'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        upcomingPriorities: (jsonData['upcomingPriorities'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        motivation: jsonData['motivation']?.toString() ??
+            'Continue seu excelente trabalho!',
         generatedAt: DateTime.now(),
       );
     } catch (e) {
-      // If JSON parsing fails, create a fallback response
+      // If JSON parsing fails, log details and create a fallback response
+      print('Failed to parse AI response JSON. Error: $e');
+      print('Attempted to parse: "$parsableJsonString"');
+      print('Original AI output from API: "$rawAiOutput"');
       return AISummaryResponse(
-        summary:
-            content.length > 500 ? content.substring(0, 500) + '...' : content,
-        keyHighlights: ['Resumo gerado com sucesso'],
-        upcomingPriorities: ['Revisar tarefas pendentes'],
-        motivation: 'Continue focado em seus objetivos!',
+        summary: rawAiOutput.length > 500
+            ? rawAiOutput.substring(0, 500) + '...'
+            : rawAiOutput, // Show the raw output if parsing fails
+        keyHighlights: ['Erro ao processar o resumo da IA.'],
+        upcomingPriorities: [
+          'Verifique os dados de entrada e tente novamente.'
+        ],
+        motivation: 'Não foi possível gerar a motivação no momento.',
         generatedAt: DateTime.now(),
       );
     }
