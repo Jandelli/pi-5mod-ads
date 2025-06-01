@@ -57,8 +57,14 @@ class AuthPageWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
+    return MaterialApp(
+      home: Scaffold(
+        body: child,
+      ),
+      theme: Theme.of(context),
+      darkTheme: Theme.of(context),
+      themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

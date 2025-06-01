@@ -48,7 +48,7 @@ class _NoteDetailsViewState extends State<NoteDetailsView> {
   late final NoteService? _noteService;
 
   final FocusNode _nameFocus = FocusNode();
-
+  bool _isUserEditingName = false; // Track user editing state
   bool _loading = false;
 
   final _formattingScrollController = ScrollController();
@@ -66,9 +66,16 @@ class _NoteDetailsViewState extends State<NoteDetailsView> {
     _noteService = _sourceService.note;
 
     _nameFocus.addListener(() {
-      if (!_nameFocus.hasFocus) {
-        _newNote = _newNote.copyWith(name: _nameController.text);
-        _updateNote();
+      if (!_nameFocus.hasFocus && _isUserEditingName) {
+        _updateNoteFromNameField();
+        _isUserEditingName = false;
+      }
+    });
+
+    // Track when user starts editing
+    _nameController.addListener(() {
+      if (_nameFocus.hasFocus) {
+        _isUserEditingName = true;
       }
     });
   }
@@ -85,10 +92,18 @@ class _NoteDetailsViewState extends State<NoteDetailsView> {
   @override
   void didUpdateWidget(covariant NoteDetailsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.note != widget.note) {
+
+    // Only update if note actually changed and user is not editing
+    if (oldWidget.note != widget.note && !_isUserEditingName) {
       _nameController.text = widget.note.name;
+      _descriptionController.text = widget.note.description;
       _newNote = widget.note;
     }
+  }
+
+  void _updateNoteFromNameField() {
+    _newNote = _newNote.copyWith(name: _nameController.text);
+    _updateNote();
   }
 
   Future<void> _updateNote() async {

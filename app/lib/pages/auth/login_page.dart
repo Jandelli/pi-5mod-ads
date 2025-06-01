@@ -117,6 +117,8 @@ class _LoginPageState extends State<LoginPage> {
 
                         // Username Field
                         TextFormField(
+                          key: const ValueKey(
+                              'login_username_field'), // Stable key
                           controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: 'Usuário',
@@ -136,6 +138,8 @@ class _LoginPageState extends State<LoginPage> {
 
                         // Password Field
                         TextFormField(
+                          key: const ValueKey(
+                              'login_password_field'), // Stable key
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
@@ -181,8 +185,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Login Button
+                        // Login Button - Isolated BlocBuilder to prevent form rebuilds
                         BlocBuilder<AuthBloc, AuthState>(
+                          buildWhen: (previous, current) =>
+                              previous.runtimeType != current.runtimeType,
                           builder: (context, state) {
                             final isLoading = state is AuthLoading;
 

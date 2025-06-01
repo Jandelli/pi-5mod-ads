@@ -88,6 +88,26 @@ class _RegistrationPageState extends State<RegistrationPage> {
     return null;
   }
 
+  String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Por favor, digite um nome de usuário';
+    }
+    if (value.trim().length < 3) {
+      return 'O nome de usuário deve ter pelo menos 3 caracteres';
+    }
+    return null;
+  }
+
+  String? _validateDisplayName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Campo opcional, sem validação necessária
+    }
+    if (value.trim().length < 3) {
+      return 'O nome de exibição deve ter pelo menos 3 caracteres';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,57 +191,59 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
                         // Username Field
                         TextFormField(
+                          key: const ValueKey(
+                              'registration_username_field'), // Stable key
                           controller: _usernameController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Usuário',
-                            prefixIcon: PhosphorIcon(PhosphorIconsLight.user),
-                            border: OutlineInputBorder(),
-                            helperText: 'Escolha um nome de usuário único',
+                            prefixIcon:
+                                const PhosphorIcon(PhosphorIconsLight.user),
+                            border: const OutlineInputBorder(),
+                            helperText: 'Usado para fazer login',
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Por favor, digite um nome de usuário';
-                            }
-                            if (value.trim().length < 3) {
-                              return 'O nome de usuário deve ter pelo menos 3 caracteres';
-                            }
-                            return null;
-                          },
+                          validator: _validateUsername,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
                         // Email Field
                         TextFormField(
+                          key: const ValueKey(
+                              'registration_email_field'), // Stable key
                           controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Email',
                             prefixIcon:
-                                PhosphorIcon(PhosphorIconsLight.envelope),
-                            border: OutlineInputBorder(),
+                                const PhosphorIcon(PhosphorIconsLight.envelope),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: _validateEmail,
+                          keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
-                        // Display Name Field (Optional)
+                        // Display Name Field
                         TextFormField(
+                          key: const ValueKey(
+                              'registration_displayname_field'), // Stable key
                           controller: _displayNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Nome de Exibição (Opcional)',
-                            prefixIcon: PhosphorIcon(
-                                PhosphorIconsLight.identificationCard),
-                            border: OutlineInputBorder(),
-                            helperText: 'Seu nome completo ou nome preferido',
+                          decoration: InputDecoration(
+                            labelText: 'Nome de Exibição',
+                            prefixIcon:
+                                const PhosphorIcon(PhosphorIconsLight.user),
+                            border: const OutlineInputBorder(),
+                            helperText: 'Como você quer ser chamado',
                           ),
+                          validator: _validateDisplayName,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
                         // Password Field
                         TextFormField(
+                          key: const ValueKey(
+                              'registration_password_field'), // Stable key
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
@@ -250,6 +272,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
                         // Confirm Password Field
                         TextFormField(
+                          key: const ValueKey(
+                              'registration_confirm_password_field'), // Stable key
                           controller: _confirmPasswordController,
                           obscureText: !_isConfirmPasswordVisible,
                           decoration: InputDecoration(
@@ -277,8 +301,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Registration Button
+                        // Registration Button - Isolated BlocBuilder to prevent form rebuilds
                         BlocBuilder<AuthBloc, AuthState>(
+                          buildWhen: (previous, current) =>
+                              previous.runtimeType != current.runtimeType,
                           builder: (context, state) {
                             final isLoading = state is AuthLoading;
 

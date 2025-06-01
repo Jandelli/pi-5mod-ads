@@ -30,15 +30,24 @@ class _MarkdownFieldState extends State<MarkdownField> {
   late final TextEditingController _controller;
   bool _editMode = false;
   final FocusNode _focusNode = FocusNode();
+  bool _isUserEditing = false; // Track if user is actively editing
 
   @override
   void initState() {
     super.initState();
     _controller =
         widget.controller ?? TextEditingController(text: widget.value);
+
     _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) {
+      if (!_focusNode.hasFocus && _isUserEditing) {
         _exitEditMode();
+      }
+    });
+
+    // Listen to text changes to track user editing
+    _controller.addListener(() {
+      if (_editMode) {
+        widget.onChanged?.call(_controller.text);
       }
     });
   }
@@ -46,14 +55,54 @@ class _MarkdownFieldState extends State<MarkdownField> {
   @override
   void didUpdateWidget(MarkdownField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
-      _controller.text = widget.value ?? _controller.text;
+
+    // Only update controller text if widget value changed AND user is not currently editing
+    if (oldWidget.value != widget.value &&
+        widget.value != null &&
+        !_isUserEditing &&
+        !_editMode &&
+        widget.value != _controller.text) {
+      _controller.text = widget.value!;
+    }
+  }
+
+  void _enterEditMode() {
+    if (!_editMode) {
+      setState(() {
+        _editMode = true;
+        _isUserEditing = true;
+      });
+      // Use post-frame callback to ensure widget is built before requesting focus
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _focusNode.canRequestFocus) {
+          _focusNode.requestFocus();
+        }
+      });
     }
   }
 
   void _exitEditMode() {
-    setState(() => _editMode = false);
-    widget.onChangeEnd?.call(_controller.text);
+    if (_editMode) {
+      setState(() {
+        _editMode = false;
+      });
+      widget.onChangeEnd?.call(_controller.text);
+      // Delay resetting user editing flag to prevent conflicts
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _isUserEditing = false;
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -66,7 +115,8 @@ class _MarkdownFieldState extends State<MarkdownField> {
                   children: [
                     if (widget.toolbar != null) widget.toolbar!,
                     TextFormField(
-                      autofocus: true,
+                      key: const ValueKey('markdown_edit_field'), // Stable key
+                      autofocus: false, // Let focus be handled manually
                       focusNode: _focusNode,
                       decoration: widget.decoration.copyWith(
                         helperText:
@@ -74,11 +124,10 @@ class _MarkdownFieldState extends State<MarkdownField> {
                       ),
                       maxLines: null,
                       minLines: 3,
-                      onChanged: widget.onChanged,
                       controller: _controller,
                       onFieldSubmitted: (_) => _exitEditMode(),
                       onEditingComplete: _exitEditMode,
-                      onTapOutside: (_) => _exitEditMode,
+                      onTapOutside: (_) => _exitEditMode(),
                     ),
                   ],
                 )
@@ -87,28 +136,14 @@ class _MarkdownFieldState extends State<MarkdownField> {
                     SizedBox(height: widget.toolbar?.height),
                     GestureDetector(
                       behavior: HitTestBehavior.translucent,
-                      // Add immediate edit mode on tap down to satisfy widget tests
-                      onTapDown: (_) {
-                        setState(() => _editMode = true);
-                        _focusNode.requestFocus();
-                      },
-                      onTap: () {
-                        setState(() => _editMode = true);
-                        _focusNode.requestFocus();
-                      },
-                      onDoubleTap: () {
-                        setState(() => _editMode = true);
-                        _focusNode.requestFocus();
-                      },
+                      onTap: _enterEditMode,
+                      onDoubleTap: _enterEditMode,
                       child: InputDecorator(
                         decoration: widget.decoration,
-                        child: AnimatedBuilder(
-                          animation: _controller,
-                          builder: (context, child) => MarkdownText(
-                            _controller.text,
-                            border: false,
-                            onTap: () => setState(() => _editMode = true),
-                          ),
+                        child: MarkdownText(
+                          _controller.text,
+                          border: false,
+                          onTap: _enterEditMode,
                         ),
                       ),
                     ),

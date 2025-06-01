@@ -251,7 +251,7 @@ class OpenAIService {
       print('Original AI output from API: "$rawAiOutput"');
       return AISummaryResponse(
         summary: rawAiOutput.length > 500
-            ? rawAiOutput.substring(0, 500) + '...'
+            ? '${rawAiOutput.substring(0, 500)}...'
             : rawAiOutput, // Show the raw output if parsing fails
         keyHighlights: ['Erro ao processar o resumo da IA.'],
         upcomingPriorities: [
