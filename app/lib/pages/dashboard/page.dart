@@ -4,7 +4,9 @@ import 'package:flow/widgets/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flow/src/generated/i18n/app_localizations.dart';
 import 'package:material_leap/helpers.dart';
-import 'package:go_router/go_router.dart'; // Add this import
+import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flow/cubits/flow.dart';
 
 import 'events.dart';
 
@@ -16,6 +18,34 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  // Use State<Widget> generic type instead of private state types
+  final _notesKey = GlobalKey<State<DashboardNotesView>>();
+  final _eventsKey = GlobalKey<State<DashboardEventsView>>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Delay refresh to ensure the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshDashboard();
+    });
+  }
+
+  void _refreshDashboard() {
+    // Cast to dynamic to access the refreshData method from both state classes
+    (_notesKey.currentState as dynamic)?.refreshData();
+    (_eventsKey.currentState as dynamic)?.refreshData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This will refresh the dashboard when dependencies change (like FlowCubit)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshDashboard();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FlowNavigation(
@@ -50,58 +80,70 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                 )),
-                const SizedBox(height: 16), // Added for spacing
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    context.go('/ai'); // Navigate to AI page
+                    context.go('/ai');
                   },
                   child: const Text('Resumo de IA'),
                 ),
-                const SizedBox(height: 16), // Added for spacing
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth >= LeapBreakpoints.medium) {
-                          return SizedBox(
-                            height: 250,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              spacing: 8,
+                const SizedBox(height: 16),
+                BlocBuilder<FlowCubit, FlowState>(
+                  builder: (context, state) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth >=
+                                LeapBreakpoints.medium) {
+                              return SizedBox(
+                                height: 250,
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                        child:
+                                            DashboardNotesView(key: _notesKey)),
+                                    const SizedBox(width: 8),
+                                    const VerticalDivider(),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                        child: DashboardEventsView(
+                                            key: _eventsKey)),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(child: DashboardNotesView()),
-                                const VerticalDivider(),
-                                Expanded(child: DashboardEventsView()),
+                                ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 250,
+                                      minWidth: 300,
+                                      maxWidth: 600,
+                                      maxHeight: 300,
+                                    ),
+                                    child: DashboardNotesView(key: _notesKey)),
+                                const Divider(),
+                                ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 250,
+                                      minWidth: 300,
+                                      maxWidth: 600,
+                                      maxHeight: 300,
+                                    ),
+                                    child:
+                                        DashboardEventsView(key: _eventsKey)),
                               ],
-                            ),
-                          );
-                        }
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  minHeight: 250,
-                                  minWidth: 300,
-                                  maxWidth: 600,
-                                  maxHeight: 300,
-                                ),
-                                child: DashboardNotesView()),
-                            const Divider(),
-                            ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  minHeight: 250,
-                                  minWidth: 300,
-                                  maxWidth: 600,
-                                  maxHeight: 300,
-                                ),
-                                child: DashboardEventsView()),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

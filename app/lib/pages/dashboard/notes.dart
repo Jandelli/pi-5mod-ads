@@ -16,21 +16,68 @@ class DashboardNotesView extends StatefulWidget {
 }
 
 class _DashboardNotesViewState extends State<DashboardNotesView> {
+  late Future<List<(Note, String)>> _notesFuture;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    refreshData();
+  }
+
+  void refreshData() {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _notesFuture = _getNotes(context);
+    });
+  }
+
   Future<List<(Note, String)>> _getNotes(BuildContext context) async {
     final sources = context.read<FlowCubit>().getCurrentServicesMap();
     final notes = <(Note, String)>[];
-    for (final source in sources.entries) {
-      notes.addAll((await source.value.note?.getNotes(limit: 5) ?? [])
-          .map((e) => (e, source.key))
-          .toList());
+
+    try {
+      for (final source in sources.entries) {
+        if (source.value.note != null) {
+          try {
+            final sourceNotes =
+                await source.value.note?.getNotes(limit: 5) ?? [];
+            notes.addAll(sourceNotes.map((e) => (e, source.key)).toList());
+          } catch (e) {
+            debugPrint('Error fetching notes for source ${source.key}: $e');
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      return notes;
+    } catch (e) {
+      debugPrint('Error fetching notes: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      return [];
     }
-    return notes;
   }
 
   @override
   void didUpdateWidget(covariant DashboardNotesView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    setState(() {});
+    refreshData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    refreshData();
   }
 
   @override
@@ -48,19 +95,42 @@ class _DashboardNotesViewState extends State<DashboardNotesView> {
             IconButton(
               icon: const PhosphorIcon(PhosphorIconsLight.arrowSquareOut),
               onPressed: () => GoRouter.of(context).go('/notes'),
-            )
+            ),
+            IconButton(
+              icon: const PhosphorIcon(PhosphorIconsLight.arrowClockwise),
+              onPressed: refreshData,
+              tooltip: 'Atualizar Notas',
+            ),
           ],
         ),
         const SizedBox(height: 20),
         Expanded(
           child: FutureBuilder<List<(Note, String)>>(
-              future: _getNotes(context),
+              future: _notesFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
+                if (snapshot.connectionState != ConnectionState.done ||
+                    _isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Text(snapshot.error.toString());
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error loading notes: ${snapshot.error}',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                          onPressed: refreshData,
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 final notes = snapshot.data ?? <(Note, String)>[];
                 if (notes.isEmpty) {
@@ -80,7 +150,7 @@ class _DashboardNotesViewState extends State<DashboardNotesView> {
                       .toList(),
                 );
               }),
-        )
+        ),
       ],
     );
   }
