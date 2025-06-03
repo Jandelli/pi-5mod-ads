@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/auth.dart';
 import '../pages/auth/login_page.dart';
 import '../pages/auth/registration_page.dart';
+import '../helpers/auth_error_handler.dart';
 
 class AuthGuard extends StatefulWidget {
   final Widget child;
@@ -27,44 +28,37 @@ class _AuthGuardState extends State<AuthGuard> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthInitial || state is AuthLoading) {
-          return const _SplashScreen();
-        } else if (state is AuthAuthenticated) {
-          return widget.child;
-        } else {
-          return _showRegistration
-              ? AuthPageWrapper(
-                  child: RegistrationPage(onBackToLogin: _toggleAuthMode),
-                )
-              : AuthPageWrapper(
-                  child: LoginPage(onCreateAccount: _toggleAuthMode),
-                );
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          // Display error snackbar on auth failures
+          AuthErrorHandler.showErrorSnackbar(context, state.message);
         }
       },
-    );
-  }
-}
-
-class AuthPageWrapper extends StatelessWidget {
-  final Widget child;
-
-  const AuthPageWrapper({
-    super.key,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: child,
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthInitial || state is AuthLoading) {
+            return const _SplashScreen();
+          } else if (state is AuthAuthenticated) {
+            return widget.child;
+          } else {
+            // Use a nested Navigator to provide an Overlay for tooltips and snackbars
+            final page = _showRegistration
+                ? RegistrationPage(onBackToLogin: _toggleAuthMode)
+                : LoginPage(onCreateAccount: _toggleAuthMode);
+            // Ensure Navigator rebuilds when toggling auth mode
+            return Navigator(
+              key: ValueKey(_showRegistration),
+              onGenerateRoute: (settings) => MaterialPageRoute(
+                builder: (ctx) => BlocProvider.value(
+                  value: context.read<AuthBloc>(),
+                  child: page,
+                ),
+              ),
+            );
+          }
+        },
       ),
-      theme: Theme.of(context),
-      darkTheme: Theme.of(context),
-      themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
     );
   }
 }

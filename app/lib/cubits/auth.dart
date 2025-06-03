@@ -149,7 +149,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthError('Login failed'));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      // Extract the actual error message from the exception
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage =
+            errorMessage.substring(11); // Remove 'Exception: ' prefix
+      }
+      emit(AuthError(errorMessage));
     }
   }
 
@@ -170,7 +176,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthError('Registration failed'));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      // Extract the actual error message from the exception
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage =
+            errorMessage.substring(11); // Remove 'Exception: ' prefix
+      }
+      emit(AuthError(errorMessage));
     }
   }
 

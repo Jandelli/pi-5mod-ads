@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../cubits/auth.dart';
 import '../../models/auth/user.dart';
+import '../../helpers/auth_error_handler.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback? onCreateAccount;
@@ -48,11 +49,13 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
+            // Use the enhanced error handler
+            AuthErrorHandler.showErrorSnackbar(context, state.message);
+          } else if (state is AuthAuthenticated) {
+            // Show success message for successful login
+            AuthErrorHandler.showSuccessSnackbar(
+              context,
+              'Bem-vindo de volta, ${state.user.name}!',
             );
           }
         },
@@ -117,14 +120,14 @@ class _LoginPageState extends State<LoginPage> {
 
                         // Username Field
                         TextFormField(
-                          key: const ValueKey(
-                              'login_username_field'), // Stable key
+                          key: const ValueKey('login_username_field'),
                           controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: 'Usuário',
                             prefixIcon:
                                 const PhosphorIcon(PhosphorIconsLight.user),
                             border: const OutlineInputBorder(),
+                            errorMaxLines: 2,
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -133,13 +136,19 @@ class _LoginPageState extends State<LoginPage> {
                             return null;
                           },
                           textInputAction: TextInputAction.next,
+                          onChanged: (value) {
+                            // Clear validation errors when user starts typing
+                            if (value.isNotEmpty &&
+                                _formKey.currentState != null) {
+                              _formKey.currentState!.validate();
+                            }
+                          },
                         ),
                         const SizedBox(height: 16),
 
                         // Password Field
                         TextFormField(
-                          key: const ValueKey(
-                              'login_password_field'), // Stable key
+                          key: const ValueKey('login_password_field'),
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
@@ -157,8 +166,12 @@ class _LoginPageState extends State<LoginPage> {
                                   _isPasswordVisible = !_isPasswordVisible;
                                 });
                               },
+                              tooltip: _isPasswordVisible
+                                  ? 'Ocultar senha'
+                                  : 'Mostrar senha',
                             ),
                             border: const OutlineInputBorder(),
+                            errorMaxLines: 2,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -168,6 +181,13 @@ class _LoginPageState extends State<LoginPage> {
                           },
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _handleLogin(),
+                          onChanged: (value) {
+                            // Clear validation errors when user starts typing
+                            if (value.isNotEmpty &&
+                                _formKey.currentState != null) {
+                              _formKey.currentState!.validate();
+                            }
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -180,12 +200,21 @@ class _LoginPageState extends State<LoginPage> {
                             });
                           },
                           title: const Text('Lembrar-me'),
+                          subtitle: Text(
+                            'Manter-me conectado por 30 dias',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                          ),
                           contentPadding: EdgeInsets.zero,
                           controlAffinity: ListTileControlAffinity.leading,
                         ),
                         const SizedBox(height: 24),
 
-                        // Login Button - Isolated BlocBuilder to prevent form rebuilds
+                        // Login Button - Enhanced with better loading state
                         BlocBuilder<AuthBloc, AuthState>(
                           buildWhen: (previous, current) =>
                               previous.runtimeType != current.runtimeType,
@@ -200,20 +229,40 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
+                                disabledBackgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.6),
                               ),
                               child: isLoading
-                                  ? SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Entrando...',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
+                                          ),
+                                        ),
+                                      ],
                                     )
                                   : const Text(
                                       'Entrar',

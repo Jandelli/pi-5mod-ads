@@ -62,34 +62,32 @@ class AuthDatabaseService {
 
   // Authentication methods
   Future<AuthSession?> authenticate(LoginCredentials credentials) async {
-    try {
-      final dbCredentials = _convertToDbCredentials(credentials);
-      final dbSession = await _databaseService.auth.authenticate(dbCredentials);
-
-      if (dbSession == null) return null;
-
-      // Get user details with roles
-      final dbUser = await _databaseService.auth.getUserById(dbSession.userId);
-      if (dbUser == null) return null;
-
-      final roles = await _databaseService.auth.getUserRoles(dbSession.userId);
-      final roleNames = roles.map((r) => r.name).toList();
-
-      final appUser = _convertToAppUser(dbUser, roleNames);
-
-      // Store session token securely
-      await _secureStorage.write(key: _sessionTokenKey, value: dbSession.token);
-
-      return AuthSession(
-        token: dbSession.token,
-        user: appUser,
-        expiresAt: dbSession.expiresAt,
-        rememberMe: credentials.rememberMe,
-      );
-    } catch (e) {
-      print('Authentication error: $e');
-      return null;
+    // Attempt authentication, propagate errors for UI handling
+    final dbCredentials = _convertToDbCredentials(credentials);
+    final dbSession = await _databaseService.auth.authenticate(dbCredentials);
+    if (dbSession == null) {
+      // No session returned means invalid credentials
+      throw StateError('invalid_credentials');
     }
+
+    // Get user details with roles
+    final dbUser = await _databaseService.auth.getUserById(dbSession.userId);
+    if (dbUser == null) return null;
+
+    final roles = await _databaseService.auth.getUserRoles(dbSession.userId);
+    final roleNames = roles.map((r) => r.name).toList();
+
+    final appUser = _convertToAppUser(dbUser, roleNames);
+
+    // Store session token securely
+    await _secureStorage.write(key: _sessionTokenKey, value: dbSession.token);
+
+    return AuthSession(
+      token: dbSession.token,
+      user: appUser,
+      expiresAt: dbSession.expiresAt,
+      rememberMe: credentials.rememberMe,
+    );
   }
 
   Future<AuthUser?> register({
@@ -98,25 +96,20 @@ class AuthDatabaseService {
     required String password,
     String? displayName,
   }) async {
-    try {
-      final registration = AuthDatabaseRegistration(
-        username: username,
-        email: email,
-        password: password,
-        displayName: displayName,
-      );
+    final registration = AuthDatabaseRegistration(
+      username: username,
+      email: email,
+      password: password,
+      displayName: displayName,
+    );
 
-      final dbUser = await _databaseService.auth.createUser(registration);
-      if (dbUser == null) return null;
+    final dbUser = await _databaseService.auth.createUser(registration);
+    if (dbUser == null) return null;
 
-      final roles = await _databaseService.auth.getUserRoles(dbUser.id!);
-      final roleNames = roles.map((r) => r.name).toList();
+    final roles = await _databaseService.auth.getUserRoles(dbUser.id!);
+    final roleNames = roles.map((r) => r.name).toList();
 
-      return _convertToAppUser(dbUser, roleNames);
-    } catch (e) {
-      print('Registration error: $e');
-      return null;
-    }
+    return _convertToAppUser(dbUser, roleNames);
   }
 
   Future<bool> changePassword({
