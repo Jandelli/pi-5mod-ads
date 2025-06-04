@@ -13,17 +13,6 @@ import 'package:flutter/foundation.dart';
 import '../directory.dart';
 
 class SourcesService extends ChangeNotifier {
-  // Add debug flag
-  static const bool _debugMode = true;
-
-  // Add simple log function
-  void debugPrint(String message) {
-    if (_debugMode) {
-      // Using print instead of debugPrint for more immediate output
-      print('[SourcesService] $message');
-    }
-  }
-
   final SettingsCubit settingsCubit;
   late final DatabaseService local;
   final List<RemoteService> remotes = [];
@@ -101,11 +90,8 @@ class SourcesService extends ChangeNotifier {
                 final customName =
                     await secureStorage.read(key: 'db_name_$dbName');
                 localDatabaseNames.add(customName ?? dbName);
-
-                debugPrint(
-                    'Loaded imported database: $dbName (display name: ${customName ?? dbName})');
               } catch (e) {
-                debugPrint('Failed to load imported database $dbName: $e');
+                // Handle individual database load errors
               }
             }
           }
@@ -117,7 +103,7 @@ class SourcesService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error loading existing imported databases: $e');
+      // Handle errors during the directory scan
     }
   }
 
@@ -211,7 +197,6 @@ class SourcesService extends ChangeNotifier {
 
       return uniqueName;
     } catch (e) {
-      debugPrint('Error importing database: $e');
       return null;
     }
   }
@@ -246,7 +231,7 @@ class SourcesService extends ChangeNotifier {
         // Notify listeners of the change
         notifyListeners();
       } catch (e) {
-        debugPrint('Error removing imported database: $e');
+        // Handle errors during removal
       }
     }
   }
@@ -267,7 +252,7 @@ class SourcesService extends ChangeNotifier {
           return bytes;
         }
       } catch (e) {
-        debugPrint('Error exporting imported database: $e');
+        // Handle errors during export
       }
     }
     return null;
@@ -275,14 +260,10 @@ class SourcesService extends ChangeNotifier {
 
   /// Renames an imported database by index (renames both file and display name)
   Future<bool> renameImportedDatabase(int index, String newName) async {
-    debugPrint('Attempting to rename database at index $index to "$newName"');
-
     if (index >= 0 && index < localDatabases.length && newName.isNotEmpty) {
-      debugPrint('Index and name validation passed');
       try {
         final db = localDatabases[index];
         final oldPath = db.db.path;
-        debugPrint('Current database path: $oldPath');
 
         final oldDbName =
             oldPath.split(Platform.pathSeparator).last.replaceAll('.db', '');
@@ -295,19 +276,15 @@ class SourcesService extends ChangeNotifier {
         final directory = Directory(oldPath).parent;
         final newPath =
             '${directory.path}${Platform.pathSeparator}$newDbFileName.db';
-        debugPrint('New database path: $newPath');
 
         await db.db.close();
-        debugPrint('Database connection closed');
 
         final oldFile = File(oldPath);
         if (await oldFile.exists()) {
           await oldFile.rename(newPath);
-          debugPrint('File renamed successfully');
 
           final newDb = DatabaseService(openDatabase);
           await newDb.setup(newDbFileName);
-          debugPrint('New database service initialized');
 
           localDatabases[index] = newDb;
           localDatabaseNames[index] = newName;
@@ -315,21 +292,16 @@ class SourcesService extends ChangeNotifier {
           await secureStorage.delete(key: 'db_name_$oldDbName');
           await secureStorage.write(
               key: 'db_name_$newDbFileName', value: newName);
-          debugPrint('Storage updated with new name');
 
           notifyListeners();
-          debugPrint('Rename operation completed successfully');
           return true;
         } else {
-          debugPrint('Error: Original file not found at $oldPath');
           return false;
         }
       } catch (e) {
-        debugPrint('Error during rename operation: $e');
         return false;
       }
     }
-    debugPrint('Invalid index or empty name provided');
     return false;
   }
 
@@ -354,11 +326,10 @@ class SourcesService extends ChangeNotifier {
             db.db.path.split(Platform.pathSeparator).last.replaceAll('.db', '');
 
         if (dbFileName == source) {
-          debugPrint('Found imported database by filename: $source');
           return db;
         }
       } catch (e) {
-        debugPrint('Error checking database filename: $e');
+        // Handle errors during source retrieval
       }
     }
 

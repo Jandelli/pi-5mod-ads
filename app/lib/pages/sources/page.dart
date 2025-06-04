@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flow/src/generated/i18n/app_localizations.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:lw_sysapi/lw_sysapi.dart';
+import 'package:collection/collection.dart';
 
 import '../../api/storage/sources.dart';
 import 'local.dart';
@@ -40,6 +41,130 @@ class SourcesPage extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
               child: Column(children: [
+                // Show current source in use
+                BlocBuilder<FlowCubit, FlowState>(
+                  builder: (context, state) {
+                    final flowCubit = context.read<FlowCubit>();
+                    final currentSources = flowCubit.getCurrentSources();
+                    final sourcesService = context.read<SourcesService>();
+
+                    String displayName = 'Nenhuma fonte selecionada';
+                    IconData iconData = PhosphorIconsLight.warning;
+
+                    if (currentSources.isNotEmpty) {
+                      final currentSource = currentSources.first;
+
+                      if (currentSource.isEmpty) {
+                        // Main local database
+                        displayName = 'Banco Local Principal';
+                        iconData = PhosphorIconsLight.laptop;
+                      } else {
+                        // Check if it's an imported database
+                        bool isImported = false;
+                        for (int i = 0;
+                            i < sourcesService.localDatabases.length;
+                            i++) {
+                          final dbService = sourcesService.localDatabases[i];
+                          String dbFileName = '';
+                          try {
+                            dbFileName = dbService.db.path
+                                .split(Platform.pathSeparator)
+                                .last
+                                .replaceAll('.db', '');
+                          } catch (_) {}
+
+                          if (dbFileName == currentSource) {
+                            displayName =
+                                sourcesService.localDatabaseNames.length > i
+                                    ? sourcesService.localDatabaseNames[i]
+                                    : 'Banco Importado ${i + 1}';
+                            iconData = PhosphorIconsLight.database;
+                            isImported = true;
+                            break;
+                          }
+                        }
+
+                        // If not imported, check if it's a remote source
+                        if (!isImported) {
+                          final remotes = sourcesService.getRemotes();
+                          final remote = remotes.firstWhereOrNull(
+                            (r) => r.identifier == currentSource,
+                          );
+                          if (remote != null) {
+                            displayName = remote.displayName;
+                            iconData = remote.icon(PhosphorIconsStyle.light);
+                          } else {
+                            displayName = 'Fonte Desconhecida';
+                            iconData = PhosphorIconsLight.question;
+                          }
+                        }
+                      }
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              PhosphorIcon(
+                                PhosphorIconsLight.checkCircle,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Fonte Atual',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              PhosphorIcon(iconData),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  displayName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
                 // Show main local database
                 ListTile(
                   title: Text(AppLocalizations.of(context).local),
@@ -142,8 +267,6 @@ class SourcesPage extends StatelessWidget {
 
                           return ListTile(
                             title: Text(displayName),
-                            subtitle:
-                                Text(underlyingDbFileName), // Updated subtitle
                             leading:
                                 const PhosphorIcon(PhosphorIconsLight.database),
                             trailing: IconButton(
@@ -217,8 +340,6 @@ class SourcesPage extends StatelessWidget {
                                         leading: const PhosphorIcon(
                                             PhosphorIconsLight.textT),
                                         onTap: () {
-                                          print('DEBUG: Rename button tapped!');
-
                                           // Get the database filename
                                           String dbFileNameToRename = 'unknown';
                                           try {
@@ -227,11 +348,8 @@ class SourcesPage extends StatelessWidget {
                                                 .split(Platform.pathSeparator)
                                                 .last
                                                 .replaceAll('.db', '');
-                                            print(
-                                                'DEBUG: Found dbFileNameToRename: $dbFileNameToRename');
                                           } catch (e) {
-                                            print(
-                                                'DEBUG: Error getting db filename: $e');
+                                            // Handle error silently
                                           }
 
                                           // Close the options dialog
@@ -326,163 +444,6 @@ class SourcesPage extends StatelessWidget {
     );
   }
 
-  static Future<void> _showRenameDialog(BuildContext context,
-      SourcesService sourcesService, String dbFileNameToRename) async {
-    print(
-        'DEBUG: _showRenameDialog called with dbFileNameToRename: $dbFileNameToRename');
-
-    int index = -1;
-    for (int i = 0; i < sourcesService.localDatabases.length; i++) {
-      final dbService = sourcesService.localDatabases[i];
-      String currentDbFileName = '';
-      try {
-        {
-          currentDbFileName = dbService.db.path
-              .split(Platform.pathSeparator)
-              .last
-              .replaceAll('.db', '');
-        }
-      } catch (_) {}
-
-      print(
-          'DEBUG: Checking database $i: $currentDbFileName vs $dbFileNameToRename');
-      if (currentDbFileName == dbFileNameToRename) {
-        index = i;
-        print('DEBUG: Found matching database at index $i');
-        break;
-      }
-    }
-
-    if (index == -1) {
-      print('DEBUG: No matching database found for $dbFileNameToRename');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Erro: Banco de dados "$dbFileNameToRename" não encontrado para renomear.')),
-        );
-      }
-      return;
-    }
-
-    print('DEBUG: Found database at index $index, showing rename dialog');
-
-    final controller = TextEditingController();
-    // Use the display name from localDatabaseNames for the current name in the dialog
-    final currentDisplayName = sourcesService.localDatabaseNames.length > index
-        ? sourcesService.localDatabaseNames[index]
-        // Fallback to the filename if display name isn't available for some reason (should not happen)
-        : dbFileNameToRename;
-    controller.text = currentDisplayName;
-
-    print('DEBUG: Current display name: $currentDisplayName');
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Renomear Banco'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: 'Nome do banco',
-            hintText: 'Digite o novo nome',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              print(
-                  'DEBUG: Save button pressed with text: ${controller.text.trim()}');
-              Navigator.of(context).pop(controller.text.trim());
-            },
-            child: Text('Renomear'),
-          ),
-        ],
-      ),
-    );
-
-    print('DEBUG: Dialog returned newName: $newName');
-
-    if (newName != null &&
-        newName.isNotEmpty &&
-        newName != currentDisplayName) {
-      print(
-          'DEBUG: Proceeding with rename operation: "$currentDisplayName" -> "$newName"');
-
-      // Check if context is still mounted before showing loading dialog
-      if (!context.mounted) {
-        print('DEBUG: Context is no longer mounted, aborting rename operation');
-        return;
-      }
-
-      try {
-        // Show loading indicator with a separate navigator context
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) => WillPopScope(
-            onWillPop: () async => false,
-            child: const AlertDialog(
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Renomeando banco de dados...'),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        print(
-            'DEBUG: Calling sourcesService.renameImportedDatabase with index $index and name "$newName"');
-        final success = await sourcesService.renameImportedDatabase(
-            index, newName); // Pass the found index
-
-        print('DEBUG: Rename operation result: $success');
-
-        // Check if context is still mounted before closing dialog and showing snackbar
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(success
-                  ? 'Banco renomeado para: $newName'
-                  : 'Erro ao renomear banco'),
-              backgroundColor: success ? Colors.green : Colors.red,
-            ),
-          );
-        } else {
-          print('DEBUG: Context no longer mounted after rename operation');
-        }
-      } catch (e) {
-        print('DEBUG: Exception during rename: $e');
-        // Check if context is still mounted before showing error
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Close loading dialog if open
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao renomear: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        } else {
-          print('DEBUG: Context no longer mounted when handling exception');
-        }
-      }
-    } else {
-      print(
-          'DEBUG: Not proceeding with rename - newName: "$newName", currentDisplayName: "$currentDisplayName"');
-    }
-  }
-
   static Future<void> _exportImportedDatabase(
       BuildContext context, SourcesService sourcesService, int index) async {
     try {
@@ -550,185 +511,18 @@ class SourcesPage extends StatelessWidget {
     }
   }
 
-  static Future<void> _showRenameDialogDirect(BuildContext context,
-      SourcesService sourcesService, String dbFileNameToRename) async {
-    print(
-        'DEBUG: _showRenameDialogDirect called with dbFileNameToRename: $dbFileNameToRename');
-
-    int index = -1;
-    for (int i = 0; i < sourcesService.localDatabases.length; i++) {
-      final dbService = sourcesService.localDatabases[i];
-      String currentDbFileName = '';
-      try {
-        {
-          currentDbFileName = dbService.db.path
-              .split(Platform.pathSeparator)
-              .last
-              .replaceAll('.db', '');
-        }
-      } catch (_) {}
-
-      print(
-          'DEBUG: Checking database $i: $currentDbFileName vs $dbFileNameToRename');
-      if (currentDbFileName == dbFileNameToRename) {
-        index = i;
-        print('DEBUG: Found matching database at index $i');
-        break;
-      }
-    }
-
-    if (index == -1) {
-      print('DEBUG: No matching database found for $dbFileNameToRename');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Erro: Banco de dados "$dbFileNameToRename" não encontrado para renomear.')),
-        );
-      }
-      return;
-    }
-
-    print('DEBUG: Found database at index $index, showing rename dialog');
-
-    final controller = TextEditingController();
-    // Use the display name from localDatabaseNames for the current name in the dialog
-    final currentDisplayName = sourcesService.localDatabaseNames.length > index
-        ? sourcesService.localDatabaseNames[index]
-        // Fallback to the filename if display name isn't available for some reason (should not happen)
-        : dbFileNameToRename;
-    controller.text = currentDisplayName;
-
-    print('DEBUG: Current display name: $currentDisplayName');
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Renomear Banco'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: 'Nome do banco',
-            hintText: 'Digite o novo nome',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              print(
-                  'DEBUG: Save button pressed with text: ${controller.text.trim()}');
-              Navigator.of(context).pop(controller.text.trim());
-            },
-            child: Text('Renomear'),
-          ),
-        ],
-      ),
-    );
-
-    print('DEBUG: Dialog returned newName: $newName');
-
-    if (newName != null &&
-        newName.isNotEmpty &&
-        newName != currentDisplayName) {
-      print(
-          'DEBUG: Proceeding with rename operation: "$currentDisplayName" -> "$newName"');
-
-      // Check if context is still mounted before showing loading dialog
-      if (!context.mounted) {
-        print('DEBUG: Context is no longer mounted, aborting rename operation');
-        return;
-      }
-
-      try {
-        // Show loading indicator with a separate navigator context
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) => WillPopScope(
-            onWillPop: () async => false,
-            child: const AlertDialog(
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Renomeando banco de dados...'),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        print(
-            'DEBUG: Calling sourcesService.renameImportedDatabase with index $index and name "$newName"');
-        final success = await sourcesService.renameImportedDatabase(
-            index, newName); // Pass the found index
-
-        print('DEBUG: Rename operation result: $success');
-
-        // Check if context is still mounted before closing dialog and showing snackbar
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(success
-                  ? 'Banco renomeado para: $newName'
-                  : 'Erro ao renomear banco'),
-              backgroundColor: success ? Colors.green : Colors.red,
-            ),
-          );
-        } else {
-          print('DEBUG: Context no longer mounted after rename operation');
-        }
-      } catch (e) {
-        print('DEBUG: Exception during rename: $e');
-        // Check if context is still mounted before showing error
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Close loading dialog if open
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao renomear: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        } else {
-          print('DEBUG: Context no longer mounted when handling exception');
-        }
-      }
-    } else {
-      print(
-          'DEBUG: Not proceeding with rename - newName: "$newName", currentDisplayName: "$currentDisplayName"');
-    }
-  }
-
   static void _performRename(BuildContext context,
       SourcesService sourcesService, String dbFileNameToRename) {
-    print(
-        'DEBUG: _performRename called with dbFileNameToRename: $dbFileNameToRename');
-
     // Use SchedulerBinding to ensure this runs after the current frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (context.mounted) {
-        print('DEBUG: Context is mounted, proceeding with rename');
-        await _showRenameDialogSimple(
-            context, sourcesService, dbFileNameToRename);
-      } else {
-        print('DEBUG: Context is not mounted in _performRename');
+        await _showRenameDialog(context, sourcesService, dbFileNameToRename);
       }
     });
   }
 
-  static Future<void> _showRenameDialogSimple(BuildContext context,
+  static Future<void> _showRenameDialog(BuildContext context,
       SourcesService sourcesService, String dbFileNameToRename) async {
-    print(
-        'DEBUG: _showRenameDialogSimple called with dbFileNameToRename: $dbFileNameToRename');
-
     int index = -1;
     for (int i = 0; i < sourcesService.localDatabases.length; i++) {
       final dbService = sourcesService.localDatabases[i];
@@ -740,29 +534,28 @@ class SourcesPage extends StatelessWidget {
             .replaceAll('.db', '');
       } catch (_) {}
 
-      print(
-          'DEBUG: Checking database $i: $currentDbFileName vs $dbFileNameToRename');
       if (currentDbFileName == dbFileNameToRename) {
         index = i;
-        print('DEBUG: Found matching database at index $i');
         break;
       }
     }
 
     if (index == -1) {
-      print('DEBUG: No matching database found for $dbFileNameToRename');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Erro: Banco de dados não encontrado para renomear.')),
+        );
+      }
       return;
     }
-
-    print('DEBUG: Found database at index $index, showing rename dialog');
 
     final controller = TextEditingController();
     final currentDisplayName = sourcesService.localDatabaseNames.length > index
         ? sourcesService.localDatabaseNames[index]
         : dbFileNameToRename;
     controller.text = currentDisplayName;
-
-    print('DEBUG: Current display name: $currentDisplayName');
 
     final newName = await showDialog<String>(
       context: context,
@@ -783,9 +576,7 @@ class SourcesPage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              final text = controller.text.trim();
-              print('DEBUG: Save button pressed with text: $text');
-              Navigator.of(context).pop(text);
+              Navigator.of(context).pop(controller.text.trim());
             },
             child: Text('Renomear'),
           ),
@@ -793,33 +584,11 @@ class SourcesPage extends StatelessWidget {
       ),
     );
 
-    print('DEBUG: Dialog returned newName: $newName');
-
     if (newName != null &&
         newName.isNotEmpty &&
         newName != currentDisplayName) {
-      print(
-          'DEBUG: Proceeding with rename operation: "$currentDisplayName" -> "$newName"');
-
-      // Perform the rename operation synchronously without await to avoid context issues
-      _performActualRename(sourcesService, index, newName, currentDisplayName);
-    } else {
-      print(
-          'DEBUG: Not proceeding with rename - newName: "$newName", currentDisplayName: "$currentDisplayName"');
+      // Perform the rename operation without waiting to avoid context issues
+      sourcesService.renameImportedDatabase(index, newName);
     }
-  }
-
-  static void _performActualRename(SourcesService sourcesService, int index,
-      String newName, String currentDisplayName) {
-    print(
-        'DEBUG: _performActualRename called with index: $index, newName: $newName');
-
-    // Perform the rename operation without waiting for the result
-    sourcesService.renameImportedDatabase(index, newName).then((success) {
-      print('DEBUG: Rename operation completed with result: $success');
-      // The SourcesService will handle notifying listeners, so the UI will update automatically
-    }).catchError((error) {
-      print('DEBUG: Rename operation failed with error: $error');
-    });
   }
 }

@@ -55,7 +55,7 @@ class OpenAIRequest with OpenAIRequestMappable {
   final int maxTokens;
 
   const OpenAIRequest({
-    this.model = 'gpt-3.5-turbo',
+    this.model = 'gpt-4o-mini',
     required this.messages,
     this.temperature = 0.7,
     this.maxTokens = 1000,

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flow/api/settings.dart';
-import 'package:flow/cubits/flow.dart';
 import 'package:flow/cubits/settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -305,11 +304,6 @@ class _FlowDrawer extends StatelessWidget {
                     automaticallyImplyLeading: false,
                     actions: [
                       const UserProfileButton(),
-                      IconButton(
-                        tooltip: AppLocalizations.of(context).sources,
-                        icon: const PhosphorIcon(PhosphorIconsLight.funnel),
-                        onPressed: () => _showSources(context),
-                      ),
                     ],
                     titleTextStyle: Theme.of(context).textTheme.titleMedium,
                   );
@@ -338,79 +332,6 @@ class _FlowDrawer extends StatelessWidget {
           ),
         );
       }),
-    );
-  }
-
-  Future<dynamic> _showSources(BuildContext context) {
-    final sources = [''];
-    final currents =
-        List<String>.from(context.read<FlowCubit>().getCurrentSources());
-    final remotes = context.read<SettingsCubit>().state.remotes;
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: Text(AppLocalizations.of(context).sources),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            bool? allSources;
-            if (currents.length >= sources.length) {
-              allSources = true;
-            } else if (currents.isEmpty) {
-              allSources = false;
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CheckboxListTile(
-                  title: Text(AppLocalizations.of(context).allSources),
-                  value: allSources,
-                  tristate: true,
-                  onChanged: (value) => setState(() {
-                    if (value ?? false) {
-                      currents.clear();
-                      currents.addAll(sources);
-                    } else {
-                      currents.clear();
-                    }
-                  }),
-                ),
-                const Divider(),
-                CheckboxListTile(
-                  title: Text(AppLocalizations.of(context).local),
-                  value: currents.contains(""),
-                  onChanged: (value) => setState(() => (value ?? false)
-                      ? currents.add("")
-                      : currents.remove("")),
-                ),
-                ...remotes.map(
-                  (e) => CheckboxListTile(
-                    title: Text(e.uri.host),
-                    subtitle: Text(e.username),
-                    value: currents.contains(e.identifier),
-                    onChanged: (value) => setState(() => (value ?? false)
-                        ? currents.add(e.identifier)
-                        : currents.remove(e.identifier)),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            child: Text(AppLocalizations.of(context).cancel),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          ElevatedButton(
-            child: Text(AppLocalizations.of(context).save),
-            onPressed: () {
-              context.read<FlowCubit>().setSources(currents);
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
     );
   }
 }

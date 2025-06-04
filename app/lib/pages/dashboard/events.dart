@@ -7,7 +7,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flow_api/models/event/item/model.dart';
 import 'package:flow_api/models/event/model.dart';
 import 'package:flow_api/models/model.dart';
-import 'package:flow/pages/calendar/page.dart'; // Import the file containing showCalendarCreate
 
 import '../../cubits/flow.dart';
 import '../../widgets/markdown_field.dart';
