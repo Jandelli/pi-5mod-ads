@@ -25,7 +25,18 @@ class FlowCubit extends Cubit<FlowState> {
   }
 
   List<String> getCurrentSources() {
-    return ['', ...sourcesService.getRemotes().map((e) => e.identifier)]
+    // Include main local database, imported databases, and remote sources
+    final sources = <String>[''];
+
+    // Add imported database identifiers
+    for (int i = 0; i < sourcesService.localDatabases.length; i++) {
+      sources.add('imported_$i');
+    }
+
+    // Add remote sources
+    sources.addAll(sourcesService.getRemotes().map((e) => e.identifier));
+
+    return sources
         .whereNot((source) => state.disabledSources.contains(source))
         .toList();
   }

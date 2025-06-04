@@ -6,8 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flow/src/generated/i18n/app_localizations.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flow_api/converters/ical.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import '../../api/storage/sources.dart';
 
 class AddSourceDialog extends StatelessWidget {
   const AddSourceDialog({super.key});
@@ -84,7 +83,8 @@ class AddSourceDialog extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context).confirmImport),
-        content: Text('Are you sure you want to import this database?'),
+        content:
+            Text('Você tem certeza que deseja importar esse banco de dados?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -100,32 +100,121 @@ class AddSourceDialog extends StatelessWidget {
 
     if (confirmed != true) return;
 
-    // Get the temp directory to store the imported file
-    final tempDir = await getTemporaryDirectory();
-    final tempDbPath = '${tempDir.path}/imported.db';
-
-    // Read the file
-    final bytes = await file.readAsBytes();
-
-    // Write to a temporary file
-    await File(tempDbPath).writeAsBytes(bytes);
-
-    // Show a success dialog
-    if (context.mounted) {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Import Successful'),
-          content: Text(
-              'Database has been imported successfully. Please restart the application to use the imported database.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(AppLocalizations.of(context).close),
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text('Importando banco de dados...'),
+              ],
             ),
-          ],
-        ),
-      );
+          ),
+        );
+      }
+
+      // Read the file
+      final bytes = await file.readAsBytes();
+
+      // Import the database using the new method
+      final sourcesService = context.read<SourcesService>();
+      final importedDbName =
+          await sourcesService.importDatabase(bytes, file.name);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (importedDbName != null) {
+        // Show success dialog with option to switch to the new database
+        if (context.mounted) {
+          final shouldSwitch = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Importado com Sucesso'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('O banco de dados foi importado com sucesso.'),
+                  const SizedBox(height: 16),
+                  Text('Deseja usar este banco de dados como fonte principal?'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Não'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Sim'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldSwitch == true) {
+            // Switch to the imported database as the current source
+            // This would typically involve updating the FlowCubit or similar state management
+            // For now, we'll just show a message
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Banco de dados importado está disponível nas fontes'),
+                ),
+              );
+            }
+          }
+        }
+      } else {
+        // Show error dialog
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Erro na Importação'),
+              content: Text(
+                  'Ocorreu um erro ao importar o banco de dados. Verifique se o arquivo é válido.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(AppLocalizations.of(context).close),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if it's open
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error dialog
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Erro na Importação'),
+            content: Text('Erro: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(AppLocalizations.of(context).close),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 

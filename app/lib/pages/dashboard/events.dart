@@ -55,8 +55,6 @@ class _DashboardEventsViewState extends State<DashboardEventsView> {
       for (final source in sources.entries) {
         if (source.value.calendarItem != null) {
           try {
-            debugPrint('Fetching events for source: ${source.key}');
-
             // Strategy 1: Use date parameter
             var items = await source.value.calendarItem?.getCalendarItems(
                   date: startOfDay,
@@ -67,8 +65,6 @@ class _DashboardEventsViewState extends State<DashboardEventsView> {
 
             // Strategy 2: If no results, try with start and end
             if (items.isEmpty) {
-              debugPrint(
-                  'No events found using date parameter, trying with start/end');
               items = await source.value.calendarItem?.getCalendarItems(
                     start: startOfDay,
                     end: endOfDay,
@@ -80,7 +76,6 @@ class _DashboardEventsViewState extends State<DashboardEventsView> {
 
             // Strategy 3: If still no results, try without status filter
             if (items.isEmpty) {
-              debugPrint('No events found with status filter, trying without');
               items = await source.value.calendarItem?.getCalendarItems(
                     date: startOfDay,
                     limit: 20,
@@ -93,11 +88,8 @@ class _DashboardEventsViewState extends State<DashboardEventsView> {
                   'Found ${items.length} events for source: ${source.key}');
               appointments
                   .addAll(items.map((e) => SourcedModel(source.key, e)));
-            } else {
-              debugPrint('No events found for source: ${source.key}');
-            }
+            } else {}
           } catch (e) {
-            debugPrint('Error fetching events for source ${source.key}: $e');
             setState(() {
               _debugInfo = 'Error fetching events: $e';
             });

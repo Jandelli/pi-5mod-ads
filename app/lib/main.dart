@@ -22,6 +22,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:material_leap/l10n/leap_localizations.dart';
 import 'package:flow_api/models/model.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localized_locales/flutter_localized_locales.dart';
 import 'package:window_manager/window_manager.dart';
@@ -95,7 +96,7 @@ Future<void> main(List<String> args) async {
       providers: [
         BlocProvider.value(value: settingsCubit),
         BlocProvider.value(value: authBloc),
-        RepositoryProvider.value(value: sourcesService),
+        ChangeNotifierProvider.value(value: sourcesService),
         RepositoryProvider.value(value: authService),
         BlocProvider(
           create: (context) => FlowCubit(context.read<SourcesService>()),

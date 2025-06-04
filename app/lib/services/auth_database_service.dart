@@ -404,35 +404,5 @@ class AuthDatabaseService {
   Future<void> initialize() async {
     // Perform any initialization tasks
     await cleanupExpiredSessions();
-
-    // Check if we need to create a default admin user
-    await _createDefaultAdminIfNeeded();
-  }
-
-  Future<void> _createDefaultAdminIfNeeded() async {
-    try {
-      final adminRole = await _databaseService.auth.getRoleByName('admin');
-      if (adminRole == null) return;
-
-      final admins =
-          await _databaseService.auth.getUsersWithRole(adminRole.id!);
-      if (admins.isNotEmpty) return;
-
-      // Create default admin user (you should change these credentials)
-      final registration = AuthDatabaseRegistration(
-        username: 'admin',
-        email: 'admin@example.com',
-        password: 'password',
-        displayName: 'Administrator',
-      );
-
-      final adminUser = await _databaseService.auth.createUser(registration);
-      if (adminUser?.id != null) {
-        await _databaseService.auth
-            .assignRoleToUser(adminUser!.id!, adminRole.id!);
-      }
-    } catch (e) {
-      print('Create default admin error: $e');
-    }
   }
 }

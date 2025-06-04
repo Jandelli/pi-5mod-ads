@@ -8,11 +8,29 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flow_api/services/database.dart';
 import 'package:flow_api/services/source.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import '../directory.dart';
 
-class SourcesService {
+class SourcesService extends ChangeNotifier {
+  // Add debug flag
+  static const bool _debugMode = true;
+
+  // Add simple log function
+  void debugPrint(String message) {
+    if (_debugMode) {
+      // Using print instead of debugPrint for more immediate output
+      print('[SourcesService] $message');
+    }
+  }
+
   final SettingsCubit settingsCubit;
   late final DatabaseService local;
   final List<RemoteService> remotes = [];
+  // Add a list to track additional local databases
+  final List<DatabaseService> localDatabases = [];
+  // Add a list to track custom names for imported databases
+  final List<String> localDatabaseNames = [];
   final BehaviorSubject<SyncStatus> syncStatus =
       BehaviorSubject.seeded(SyncStatus.synced);
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
@@ -41,7 +59,66 @@ class SourcesService {
       await _connectRemote(storage,
           await secureStorage.read(key: 'remote ${storage.toFilename()}'));
     }
+
+    // Load existing imported databases
+    await _loadExistingImportedDatabases();
+
     synchronize();
+  }
+
+  /// Scans the Flow directory for imported database files and loads them
+  Future<void> _loadExistingImportedDatabases() async {
+    try {
+      final flowDirectory = await getFlowDirectory();
+      final directory = Directory(flowDirectory);
+
+      if (await directory.exists()) {
+        final files = await directory.list().toList();
+
+        // Clear existing imported databases
+        localDatabases.clear();
+        localDatabaseNames.clear();
+
+        for (final file in files) {
+          if (file is File && file.path.endsWith('.db')) {
+            final fileName = file.path.split(Platform.pathSeparator).last;
+            final dbName = fileName.replaceAll('.db', '');
+
+            // Skip the main local database
+            if (dbName == 'local') continue;
+
+            // Only load imported databases (those that start with 'imported_')
+            if (dbName.startsWith('imported_')) {
+              try {
+                // Create a new DatabaseService for this imported database
+                final importedDb = DatabaseService(openDatabase);
+                await importedDb.setup(dbName);
+
+                // Add to the lists
+                localDatabases.add(importedDb);
+
+                // Load custom name from secure storage if it exists
+                final customName =
+                    await secureStorage.read(key: 'db_name_$dbName');
+                localDatabaseNames.add(customName ?? dbName);
+
+                debugPrint(
+                    'Loaded imported database: $dbName (display name: ${customName ?? dbName})');
+              } catch (e) {
+                debugPrint('Failed to load imported database $dbName: $e');
+              }
+            }
+          }
+        }
+
+        // Notify listeners if we loaded any databases
+        if (localDatabases.isNotEmpty) {
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading existing imported databases: $e');
+    }
   }
 
   Future<void> synchronize([bool force = false]) async {
@@ -94,11 +171,201 @@ class SourcesService {
 
   List<RemoteStorage> getRemotes() => settingsCubit.state.remotes;
 
+  /// Imports a database file and adds it as a new local source
+  Future<String?> importDatabase(
+      List<int> bytes, String originalFileName) async {
+    try {
+      // Generate a unique name for the imported database
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final baseName = originalFileName.replaceAll('.db', '');
+      final uniqueName = 'imported_${baseName}_$timestamp';
+
+      // Get the Flow directory
+      final flowDirectory = await getFlowDirectory();
+      final dbPath = '$flowDirectory/$uniqueName.db';
+
+      // Ensure the directory exists
+      final directory = Directory(flowDirectory);
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+
+      // Write the imported database file
+      final file = File(dbPath);
+      await file.writeAsBytes(bytes);
+
+      // Create a new DatabaseService for the imported database
+      final importedDb = DatabaseService(openDatabase);
+      await importedDb.setup(uniqueName);
+
+      // Add to the list of local databases
+      localDatabases.add(importedDb);
+      // Add a custom name for the imported database
+      localDatabaseNames.add(uniqueName);
+
+      // Store the custom name in secure storage
+      await secureStorage.write(key: 'db_name_$uniqueName', value: uniqueName);
+
+      // Notify listeners of the change
+      notifyListeners();
+
+      return uniqueName;
+    } catch (e) {
+      debugPrint('Error importing database: $e');
+      return null;
+    }
+  }
+
+  /// Removes an imported database by index
+  Future<void> removeImportedDatabase(int index) async {
+    if (index >= 0 && index < localDatabases.length) {
+      try {
+        final db = localDatabases[index];
+        final dbPath = db.db.path;
+
+        // Get the database name for secure storage cleanup
+        final dbName =
+            dbPath.split(Platform.pathSeparator).last.replaceAll('.db', '');
+
+        // Close the database connection
+        await db.db.close();
+
+        // Delete the physical database file
+        final file = File(dbPath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+
+        // Remove custom name from secure storage
+        await secureStorage.delete(key: 'db_name_$dbName');
+
+        // Remove from the lists
+        localDatabases.removeAt(index);
+        localDatabaseNames.removeAt(index);
+
+        // Notify listeners of the change
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Error removing imported database: $e');
+      }
+    }
+  }
+
+  /// Exports an imported database by index
+  Future<List<int>?> exportImportedDatabase(int index) async {
+    if (index >= 0 && index < localDatabases.length) {
+      try {
+        final db = localDatabases[index];
+
+        // Get the database file path
+        final dbPath = db.db.path;
+        final file = File(dbPath);
+
+        if (await file.exists()) {
+          // Read the database file as bytes
+          final bytes = await file.readAsBytes();
+          return bytes;
+        }
+      } catch (e) {
+        debugPrint('Error exporting imported database: $e');
+      }
+    }
+    return null;
+  }
+
+  /// Renames an imported database by index (renames both file and display name)
+  Future<bool> renameImportedDatabase(int index, String newName) async {
+    debugPrint('Attempting to rename database at index $index to "$newName"');
+
+    if (index >= 0 && index < localDatabases.length && newName.isNotEmpty) {
+      debugPrint('Index and name validation passed');
+      try {
+        final db = localDatabases[index];
+        final oldPath = db.db.path;
+        debugPrint('Current database path: $oldPath');
+
+        final oldDbName =
+            oldPath.split(Platform.pathSeparator).last.replaceAll('.db', '');
+
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final sanitized =
+            newName.replaceAll(RegExp(r'[^\w\s-]', unicode: true), '_');
+        final newDbFileName = 'imported_${sanitized}_$timestamp';
+
+        final directory = Directory(oldPath).parent;
+        final newPath =
+            '${directory.path}${Platform.pathSeparator}$newDbFileName.db';
+        debugPrint('New database path: $newPath');
+
+        await db.db.close();
+        debugPrint('Database connection closed');
+
+        final oldFile = File(oldPath);
+        if (await oldFile.exists()) {
+          await oldFile.rename(newPath);
+          debugPrint('File renamed successfully');
+
+          final newDb = DatabaseService(openDatabase);
+          await newDb.setup(newDbFileName);
+          debugPrint('New database service initialized');
+
+          localDatabases[index] = newDb;
+          localDatabaseNames[index] = newName;
+
+          await secureStorage.delete(key: 'db_name_$oldDbName');
+          await secureStorage.write(
+              key: 'db_name_$newDbFileName', value: newName);
+          debugPrint('Storage updated with new name');
+
+          notifyListeners();
+          debugPrint('Rename operation completed successfully');
+          return true;
+        } else {
+          debugPrint('Error: Original file not found at $oldPath');
+          return false;
+        }
+      } catch (e) {
+        debugPrint('Error during rename operation: $e');
+        return false;
+      }
+    }
+    debugPrint('Invalid index or empty name provided');
+    return false;
+  }
+
+  /// Gets all available local database names (including imported ones)
+  List<String> getLocalDatabaseNames() {
+    final names = <String>['local']; // The main local database
+
+    // Add imported database display names
+    names.addAll(localDatabaseNames);
+
+    return names;
+  }
+
   SourceService getSource(String source) {
-    if (source.isEmpty) return local;
+    if (source.isEmpty || source == 'local') return local;
+
+    // Check if it's an imported local database by its underlying filename
+    for (int i = 0; i < localDatabases.length; i++) {
+      final db = localDatabases[i];
+      try {
+        final dbFileName =
+            db.db.path.split(Platform.pathSeparator).last.replaceAll('.db', '');
+
+        if (dbFileName == source) {
+          debugPrint('Found imported database by filename: $source');
+          return db;
+        }
+      } catch (e) {
+        debugPrint('Error checking database filename: $e');
+      }
+    }
+
+    // If not found by filename, then check remotes
     return remotes.firstWhereOrNull(
             (element) => element.remoteStorage.identifier == source) ??
-        local;
+        local; // Fallback to local if not found anywhere
   }
 
   Future<void> clearRemotes() async {
